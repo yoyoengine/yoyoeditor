@@ -8,6 +8,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(YoyoEditor)
 
+include(FetchContent)
+Set(FETCHCONTENT_QUIET FALSE)
+
 # set YOYO_CMAKE_COPY_ENGINE_RESOURCES to true/on since editor needs the engine resources loose folder
 set(YOYO_CMAKE_COPY_ENGINE_RESOURCES true CACHE BOOL "Copy the engine resources to the editor build directory")
 
@@ -16,9 +19,6 @@ set(YOYO_ENGINE_BUILD_RELEASE off CACHE BOOL "Build engine for editor in debug m
 # configure building the lua API
 set(BUILD_LUA_RUNTIME ON CACHE BOOL "Build the Lua runtime for the editor")
 set(LUA_RUNTIME_OUTPUT ${CMAKE_BINARY_DIR}/bin/${CMAKE_SYSTEM_NAME}/engine_resources/ye_runtime.lua CACHE STRING "The output path for the Lua runtime")
-
-# Include the engine project and directories for headers
-add_subdirectory(../engine engine_build)
 
 # Set C/C++ compiler flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -g")
@@ -41,6 +41,18 @@ if(UNIX)
     
     # Create the executable and link the engine library
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
+
+    # Grab the engine from github
+    FetchContent_Declare(
+        yoyoengine
+        GIT_REPOSITORY https://github.com/yoyoengine/yoyoengine.git
+        GIT_TAG main
+        GIT_PROGRESS TRUE
+    )
+    # A little jank... but it works
+    FetchContent_MakeAvailable(yoyoengine)
+    add_subdirectory(${yoyoengine_SOURCE_DIR}/engine)
+
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine m)
 
     target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
