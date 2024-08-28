@@ -49,9 +49,16 @@ if(UNIX)
         GIT_TAG main
         GIT_PROGRESS TRUE
     )
+    
     # A little jank... but it works
     FetchContent_MakeAvailable(yoyoengine)
-    add_subdirectory(${yoyoengine_SOURCE_DIR}/engine)
+    
+    # Check if YOYOENGINE_PATH is defined
+    if(NOT DEFINED YOYO_ENGINE_PATH)
+        set(YOYO_ENGINE_PATH ${yoyoengine_SOURCE_DIR})
+    endif()
+    
+    add_subdirectory(${YOYO_ENGINE_PATH} ${CMAKE_BINARY_DIR}/yoyoengine)
 
     target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine m)
 

@@ -25,7 +25,7 @@ if [ ! -f "CMakeCache.txt" ] || [ "$FORCE_RECONFIGURE" == true ]; then
 
     # Run make without -j4 on the first build (some kind of race condition)
     echo "Running make (first build)..."
-    make
+    make -j$(nproc)
     if [ $? -eq 0 ]; then
         echo "make build succeeded."
     else
