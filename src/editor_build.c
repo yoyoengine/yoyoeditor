@@ -102,11 +102,10 @@ char **retrieve_build_args() {
 
     const char *game_name = json_string_value(json_object_get(SETTINGS_FILE, "name"));
     const char *game_rc_path = json_string_value(json_object_get(BUILD_FILE, "rc_path"));
-    const char *engine_source_dir = json_string_value(json_object_get(BUILD_FILE, "engine_source_dir"));
     const char *cflags = json_string_value(json_object_get(BUILD_FILE, "cflags"));
     const char *platform = json_string_value(json_object_get(BUILD_FILE, "platform"));
 
-    if (!game_name || !game_rc_path || !engine_source_dir || !cflags || !platform) {
+    if (!game_name || !game_rc_path || !cflags || !platform) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
         goto error;
     }
@@ -114,10 +113,10 @@ char **retrieve_build_args() {
     args[0] = malloc(strlen(game_name) + strlen("-DGAME_NAME=") + 1);
     args[1] = malloc(strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1);
     args[2] = malloc(strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1);
-    args[3] = malloc(strlen(engine_source_dir) + strlen("-DYOYO_ENGINE_SOURCE_DIR=") + 1);
+    args[3] = malloc(1); // used to be engine source dir, now reserved for future use
     args[4] = malloc(1); // Placeholder for future use
     args[5] = malloc(1); // Placeholder for future use
-    args[6] = malloc(strlen(engine_source_dir) + strlen(platform) + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256);
+    args[6] = malloc(strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256);
 
     if (!args[0] || !args[1] || !args[2] || !args[3] || !args[4] || !args[5] || !args[6]) {
         perror("Failed to allocate memory for argument strings");
@@ -127,14 +126,15 @@ char **retrieve_build_args() {
     snprintf(args[0], strlen(game_name) + strlen("-DGAME_NAME=") + 1, "-DGAME_NAME=%s", game_name);
     snprintf(args[1], strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1, "-DGAME_RC_PATH=%s", game_rc_path);
     snprintf(args[2], strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1, "-DCMAKE_C_FLAGS=%s", cflags);
-    snprintf(args[3], strlen(engine_source_dir) + strlen("-DYOYO_ENGINE_SOURCE_DIR=") + 1, "-DYOYO_ENGINE_SOURCE_DIR=%s", engine_source_dir);
+    snprintf(args[3], 1, "\0");
     snprintf(args[4], 1, "\0");
     snprintf(args[5], 1, "\0");
 
     if (strcmp(platform, "windows") != 0 && strcmp(platform, "emscripten") != 0) {
         snprintf(args[6], 1, "\0");
     } else {
-        snprintf(args[6], strlen(engine_source_dir) + strlen(platform) + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256, "-DCMAKE_TOOLCHAIN_FILE=%s/toolchains/%s.cmake", engine_source_dir, platform);
+        snprintf(args[6], strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256, "-DCMAKE_TOOLCHAIN_FILE=%s/toolchains/%s.cmake", EDITOR_STATE.opened_project_path, platform);
+        printf("toolchain file: %s\n", args[6]);
     }
 
     // delimeter
@@ -174,7 +174,7 @@ void editor_run(){
         chdir(ye_path("build"));
 
         // run the game
-        execlp("make", "make", "run", NULL);
+        execlp("make", "make", "-j8", "run", NULL);
         exit(0);
     }
     // else {
@@ -288,7 +288,7 @@ void editor_build(bool force_configure, bool should_run){
         snprintf(status, sizeof(status), "Running Make ...");
         write(EDITOR_STATE.pipefd[1], status, strlen(status));
 
-        system("make");
+        system("make -j8");
 
         // from ye_path(), execute cmake args ..
         // printf(execv("cmake", args));

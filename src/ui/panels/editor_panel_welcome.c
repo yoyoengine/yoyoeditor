@@ -19,6 +19,7 @@
 #include "editor_panels.h"
 #include "editor_fs_ops.h"
 #include "editor_utils.h"
+#include "editor_project_management.h"
 
 int is_curl_installed() {
     // TODO: NOTCROSSPLATFORM
@@ -449,74 +450,14 @@ void create_project_popup(struct nk_context *ctx) {
             char new_proj_full_path[512];
             snprintf(new_proj_full_path, sizeof(new_proj_full_path), "%s/%s", new_proj_path, new_proj_name);
 
-            if(!editor_create_directory(new_proj_full_path)){
-                ye_logf(error, "Failed to create project at %s\n", new_proj_full_path);
-                
-                // TODO: stuff like this is a good case for labels, goto: end
-                nk_popup_end(ctx);
-                return;
-            }
-
-            // copy template
-            char template_path[512];
-            snprintf(template_path, sizeof(template_path), "%s/.local/share/yoyoengine/source/template", getenv("HOME"));
-            printf("template_path: %s\n", template_path);
-
-            char game_path[512];
-            snprintf(game_path, sizeof(game_path), "%s/game", new_proj_full_path);
-
-            if(!editor_copy_directory(template_path, game_path)){
-                ye_logf(error, "Failed to copy template to %s\n", game_path);
-                
-                nk_popup_end(ctx);
-                return;
-            }
-
-            // run git init in new_proj_full_path
-            char git_init_cmd[512];
-            snprintf(git_init_cmd, sizeof(git_init_cmd), "cd \"%s\" && git init", new_proj_full_path);
-            if(system(git_init_cmd) != 0){
-                ye_logf(error, "Failed to run git init in %s\n", new_proj_full_path);
-                
-                nk_popup_end(ctx);
-                return;
-            }
-
-            // get the desired tag version from a dumb macro hack
-            char tag[16];
-            snprintf(tag, sizeof(tag), "%s", YOYO_ENGINE_VERSION_STRING);
-
-            // HACK: if we are using the build- convention,
-            // the tag uses a - instead of a space.
-            if(tag[0] == 'b'){
-                tag[5] = '-';
-            }
-
-            printf("tag: %s\n", tag);
-
-            // run git submodule add https://github.com/yoyoengine/yoyoengine.git in new_proj_full_path
-            char git_submodule_cmd[512];
-            snprintf(git_submodule_cmd, sizeof(git_submodule_cmd), 
-                "cd \"%s\" && git submodule add https://github.com/yoyoengine/yoyoengine.git && cd yoyoengine && git checkout %s", 
-                new_proj_full_path, tag);
-            if(system(git_submodule_cmd) != 0){
-
-                // special development edge case to not exit early
-                if(strcmp(tag, "build-0") != 0){
-                    ye_logf(error, "Failed to run git submodule add in %s\n", new_proj_full_path);
-
-                    nk_popup_end(ctx);
-                    return;
-                }
-                
-            }
+            editor_create_new_project(new_proj_full_path);
 
             // set key in project cache
             json_t *project = json_object();
             json_object_set_new(project, "name", json_string(new_proj_name));
             char stamp[11]; get_stamp_string(&stamp, sizeof(stamp));
             json_object_set_new(project, "date", json_string(&stamp));
-            json_object_set_new(project, "path", json_string(game_path));
+            json_object_set_new(project, "path", json_string(new_proj_full_path));
 
             json_t *projects = json_object_get(project_cache, "projects");
 
@@ -566,6 +507,27 @@ void group_projects(struct nk_context *ctx) {
                 }
 
                 json_t *settings = ye_json_read(settings_path);
+
+                if(!settings){
+                    ye_logf(error, "Failed to read %s\n", settings_path);
+                    free(path);
+                    nk_group_end(ctx);
+                    return;
+                }
+
+                /*
+                    Check editor runtime version
+                */
+                const char *version = json_string_value(json_object_get(settings, "engine_version"));
+
+                int major, minor;
+                ye_get_version(version, &major, &minor);
+                
+                // we dont gaurantee backwards compatibility, but minor versions should be ok
+                if(YOYO_ENGINE_MAJOR_VERSION != major) {
+                    // just warn if major versions are different
+                    ye_logf(warning, "Project version %s does not match editor version %s. Proceeding anyways...\n", version, YOYO_ENGINE_VERSION_STRING);
+                }
 
                 const char * name = json_string_value(json_object_get(settings, "name"));
 
@@ -663,8 +625,21 @@ void group_projects(struct nk_context *ctx) {
                 char stamp[11]; get_stamp_string(&stamp, sizeof(stamp));
                 json_object_set_new(project, "date", json_string(&stamp));
                 
-                // json_array_insert_new(projects, 0, project);
-                // json_array_remove(projects, i-1);
+                // move the opened project to the front of the list
+                // create copy of project
+                
+                ye_json_log(projects);
+                json_array_insert_new(projects, 0, json_deep_copy(project));
+                ye_json_log(projects);
+                // remove old project
+                json_array_remove(projects, i + 1);
+                ye_json_log(projects);
+
+                // update again here since we moved stuff
+                project = json_array_get(projects, 0);
+                const char *date_str = json_string_value(json_object_get(project, "date"));
+                const char *name_str = json_string_value(json_object_get(project, "name"));
+                const char *path_str = json_string_value(json_object_get(project, "path"));
 
                 serialize_projects();
 

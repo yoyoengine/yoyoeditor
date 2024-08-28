@@ -20,6 +20,7 @@
 
 #include "editor.h"
 #include "editor_ui.h"
+#include "editor_build.h"
 #include "editor_input.h"
 #include "editor_panels.h"
 #include "editor_selection.h"

@@ -252,29 +252,6 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_combobox(ctx, platforms, NK_LEN(platforms), &build_platform_int, 25, nk_vec2(200,200));
 
             /*
-                Engine Build Path (string input)
-            */
-            nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
-            nk_layout_row_push(ctx, 0.5f);
-
-            bounds = nk_widget_bounds(ctx);
-            nk_label(ctx, "Engine Build Path:", NK_TEXT_LEFT);
-            if (nk_input_is_mouse_hovering_rect(in, bounds))
-                nk_tooltip(ctx, "The path to the engine build you want to use.");
-            nk_layout_row_push(ctx, 0.43f);
-            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, build_engine_source_dir, 256, nk_filter_default);
-
-            nk_layout_row_push(ctx, 0.05f);
-            nk_layout_row_push(ctx, 0.06f);
-            if(nk_button_image(ctx, editor_icons.folder)){
-                char *new_path = editor_file_dialog_select_folder();
-                if(new_path != NULL){
-                    strncpy(build_engine_source_dir, new_path, (size_t)sizeof(build_engine_source_dir) - 1);
-                    free(new_path);
-                }
-            }
-
-            /*
                 Additional C Flags (string input)
             */
             nk_layout_row_dynamic(ctx, 25, 2);
@@ -629,15 +606,6 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         strncpy(build_platform, (char*)tmp_build_platform, (size_t)sizeof(build_platform) - 1);
                         build_platform[(size_t)sizeof(build_platform) - 1] = '\0'; // null terminate just in case TODO: write helper?
 
-                        /*
-                            Engine Build Path
-                        */
-                        const char * tmp_build_engine_source_dir;
-                        if(!ye_json_string(BUILD_FILE, "engine_source_dir", &tmp_build_engine_source_dir)){
-                            strcpy((char*)tmp_build_engine_source_dir,"");
-                        }
-                        strncpy(build_engine_source_dir, (char*)tmp_build_engine_source_dir, (size_t)sizeof(build_engine_source_dir) - 1);
-                        build_engine_source_dir[(size_t)sizeof(build_engine_source_dir) - 1] = '\0'; // null terminate just in case TODO: write helper?
                     }
                     else{
                         ye_logf(error, "build.yoyo not found.");
