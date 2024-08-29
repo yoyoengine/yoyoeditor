@@ -55,7 +55,7 @@ if(UNIX)
     
     # Check if YOYOENGINE_PATH is defined
     if(NOT DEFINED YOYO_ENGINE_PATH)
-        set(YOYO_ENGINE_PATH ${yoyoengine_SOURCE_DIR})
+        set(YOYO_ENGINE_PATH ${yoyoengine_SOURCE_DIR}/engine)
     endif()
     
     add_subdirectory(${YOYO_ENGINE_PATH} ${CMAKE_BINARY_DIR}/yoyoengine)
