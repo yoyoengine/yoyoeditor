@@ -148,11 +148,16 @@ void serialize_projects() {
         json_object_set_new(project_cache, "projects", json_array());
     }
 
-    ye_json_write(expand_tilde("~/.local/share/yoyoengine/project_cache.yoyo"), project_cache);
+    ye_json_write(editor_path("project_cache.yoyo"), project_cache);
 }
 
 void load_project_cache() {
-    project_cache = ye_json_read(expand_tilde("~/.local/share/yoyoengine/project_cache.yoyo"));
+    project_cache = ye_json_read(editor_path("project_cache.yoyo"));
+
+    if(!project_cache){
+        ye_logf(info, "No project cache found. Creating new one.\n");
+        serialize_projects();
+    }
 }
 
 //////////////////////////////////
@@ -585,7 +590,7 @@ void group_projects(struct nk_context *ctx) {
         if(nk_button_image(ctx, editor_icons.gear)){
             ye_logf(debug, "Opening Cached Projects File\n");
 
-            editor_open_in_system(expand_tilde("~/.local/share/yoyoengine/project_cache.yoyo"));
+            editor_open_in_system(editor_path("project_cache.yoyo"));
         }
 
         rolling_height += 30;
