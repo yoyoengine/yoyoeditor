@@ -4,18 +4,6 @@ This is the home of yoyoeditor, the official visual editor for [yoyoengine](http
 
 ## Screenshots
 
-<style>
-  .full-width-table {
-    width: 100%;
-  }
-  .full-width-table img {
-    width: 100%;
-  }
-  .full-width-table td {
-    width: 50%;
-  }
-</style>
-
 <table class="full-width-table">
   <tr>
     <td><img src=".github/media/welcome.png" alt="Welcome"/></td>
