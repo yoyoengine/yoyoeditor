@@ -386,12 +386,15 @@ void ye_editor_paint_menu(struct nk_context *ctx){
             Popup for getting information to create new scenes
         */
         if(new_scene_popup_open){
-            struct nk_rect s = { 0, 0, 400, 300 };
+            struct nk_rect s = { 0, 0, 400, 175 };
             if (nk_popup_begin(ctx, NK_POPUP_STATIC, "About", NK_WINDOW_MOVABLE, s)) {
                 nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "Create a new scene", NK_TEXT_CENTERED);
+                nk_label(ctx, "(do not include path or extension)", NK_TEXT_CENTERED);
+                nk_layout_row_dynamic(ctx, 25, 2) ;
                 nk_label(ctx, "Scene Name", NK_TEXT_CENTERED);
-                nk_layout_row_dynamic(ctx, 25, 1);
                 nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, new_scene_name, 256, nk_filter_default);
+                nk_layout_row_dynamic(ctx, 25, 1); // spacer
                 nk_layout_row_dynamic(ctx, 25, 2);
                 if(nk_button_label(ctx, "Abort")){
                     new_scene_popup_open = false;
@@ -405,7 +408,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
 
                     json_t *new_scene = json_object();
                     json_object_set_new(new_scene, "name", json_string(new_scene_name));
-                    json_object_set_new(new_scene, "version", json_integer(YOYO_ENGINE_SCENE_VERSION)); // TODO: this should be a macro
+                    json_object_set_new(new_scene, "version", json_integer(YOYO_ENGINE_SCENE_VERSION));
                     json_object_set_new(new_scene, "styles", json_array());
                     json_object_set_new(new_scene, "prefabs", json_array());
 
@@ -423,15 +426,15 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     json_object_set_new(components, "transform", json_object());
                     json_object_set_new(components, "camera", json_object());
 
-                    json_object_set_new(json_object_get(components, "transform"), "x", json_integer(0));
-                    json_object_set_new(json_object_get(components, "transform"), "y", json_integer(0));
+                    json_object_set_new(json_object_get(components, "transform"), "x", json_real(0));
+                    json_object_set_new(json_object_get(components, "transform"), "y", json_real(0));
 
                     json_object_set_new(json_object_get(components, "camera"), "active", json_true());
                     json_object_set_new(json_object_get(components, "camera"), "z", json_integer(999));
 
                     json_t *view_field = json_object();
-                    json_object_set_new(view_field, "w", json_integer(1920));
-                    json_object_set_new(view_field, "h", json_integer(1080));
+                    json_object_set_new(view_field, "w", json_real(1920));
+                    json_object_set_new(view_field, "h", json_real(1080));
                     json_object_set_new(json_object_get(components, "camera"), "view field", view_field);
 
                     json_object_set_new(camera, "components", components);

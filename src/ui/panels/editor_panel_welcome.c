@@ -628,12 +628,9 @@ void group_projects(struct nk_context *ctx) {
                 // move the opened project to the front of the list
                 // create copy of project
                 
-                ye_json_log(projects);
                 json_array_insert_new(projects, 0, json_deep_copy(project));
-                ye_json_log(projects);
                 // remove old project
                 json_array_remove(projects, i + 1);
-                ye_json_log(projects);
 
                 // update again here since we moved stuff
                 project = json_array_get(projects, 0);

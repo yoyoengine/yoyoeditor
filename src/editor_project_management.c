@@ -54,6 +54,7 @@ void editor_create_new_project(const char *target_dir) {
         }
         
         // build the initial packs
+        ye_update_base_path(target_dir);
         editor_build_packs(true);
 
         ye_logf(info, "Successfully created project at %s\n", target_dir);
