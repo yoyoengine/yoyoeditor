@@ -104,8 +104,9 @@ char **retrieve_build_args() {
     const char *game_rc_path = json_string_value(json_object_get(BUILD_FILE, "rc_path"));
     const char *cflags = json_string_value(json_object_get(BUILD_FILE, "cflags"));
     const char *platform = json_string_value(json_object_get(BUILD_FILE, "platform"));
+    const char *core_tag = json_string_value(json_object_get(BUILD_FILE, "core_tag"));
 
-    if (!game_name || !game_rc_path || !cflags || !platform) {
+    if (!game_name || !game_rc_path || !cflags || !platform || !core_tag) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
         goto error;
     }
@@ -114,7 +115,7 @@ char **retrieve_build_args() {
     args[1] = malloc(strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1);
     args[2] = malloc(strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1);
     args[3] = malloc(1); // used to be engine source dir, now reserved for future use
-    args[4] = malloc(strlen(YOYO_ENGINE_VERSION_STRING) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
+    args[4] = malloc(strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
     args[5] = malloc(1); // Placeholder for future use
     args[6] = malloc(strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256);
 
@@ -127,7 +128,7 @@ char **retrieve_build_args() {
     snprintf(args[1], strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1, "-DGAME_RC_PATH=%s", game_rc_path);
     snprintf(args[2], strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1, "-DCMAKE_C_FLAGS=%s", cflags);
     snprintf(args[3], 1, "\0");
-    snprintf(args[4], strlen(YOYO_ENGINE_VERSION_STRING) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", YOYO_ENGINE_VERSION_STRING);
+    snprintf(args[4], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
     snprintf(args[5], 1, "\0");
 
     if (strcmp(platform, "windows") != 0 && strcmp(platform, "emscripten") != 0) {
