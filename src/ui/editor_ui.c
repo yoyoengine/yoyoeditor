@@ -13,6 +13,7 @@
 #include "editor_serialize.h"
 #include "editor_panels.h"
 #include "editor_selection.h"
+#include "editor_utils.h"
 #include <Nuklear/style.h>
 
 char search_text[256] = {""};
@@ -319,7 +320,7 @@ void ye_editor_paint_editor_settings(struct nk_context *ctx){
         nk_layout_row_dynamic(ctx, 25, 2);
         nk_label(ctx, "Zoom style:", NK_TEXT_CENTERED);
         static const char *zoom_styles[] = {"top left", "center", "mouse"};
-        nk_combobox(ctx, zoom_styles, NK_LEN(zoom_styles), &PREFS.zoom_style, 25, nk_vec2(200,200));
+        nk_combobox(ctx, zoom_styles, NK_LEN(zoom_styles), (int *)(&PREFS.zoom_style), 25, nk_vec2(200,200));
         nk_label(ctx, "", NK_TEXT_CENTERED);
 
         nk_layout_row_dynamic(ctx, 25, 2);

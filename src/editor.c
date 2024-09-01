@@ -7,16 +7,20 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <linux/wait.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
+
+#include <yoyoengine/yoyoengine.h>
+#include <yoyoengine/logging.h>
+
 #include <Nuklear/nuklear.h>
 #include <Nuklear/style.h>
 #include <Nuklear/nuklear_sdl_renderer.h>
 
-#include <yoyoengine/yoyoengine.h>
 
 #include "editor.h"
 #include "editor_ui.h"

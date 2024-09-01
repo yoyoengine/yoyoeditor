@@ -57,7 +57,7 @@ void editor_panel_scene_settings(struct nk_context *ctx){
             /*
                 Default Camera
             */
-            char *dc = NULL;
+            const char *dc = NULL;
             if(!ye_json_string(_scene, "default camera", &dc))
                 strcpy(scene_default_camera, "");
             else
@@ -145,7 +145,7 @@ void editor_panel_scene_settings(struct nk_context *ctx){
         }
         
         nk_layout_row_dynamic(ctx, 30, 2);
-        nk_checkbox_label(ctx, "Loop", &scene_music_loop);
+        nk_checkbox_label(ctx, "Loop", (int *)(&scene_music_loop));
         nk_property_float(ctx, "Volume", 0.0f, &scene_music_volume, 1.0f, 0.1f, 0.1f); 
 
         /*

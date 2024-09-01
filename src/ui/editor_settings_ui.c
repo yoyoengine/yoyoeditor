@@ -582,7 +582,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         /*
                             Build mode
                         */
-                        char * tmp_build_mode;
+                        const char * tmp_build_mode;
                         if(!ye_json_string(BUILD_FILE, "build_mode", &tmp_build_mode)){
                             build_mode_int = 0;
                         }
@@ -599,11 +599,17 @@ void ye_editor_paint_project(struct nk_context *ctx){
                             Engine tag name
                         */
                         const char * tmp_build_engine_tag_name;
-                        if(!ye_json_string(BUILD_FILE, "core_tag", &tmp_build_engine_tag_name)){
-                            ye_version_tagify(YOYO_ENGINE_VERSION_STRING, tmp_build_engine_tag_name);
+                        char tmp_buffer[512];
+                        if(ye_json_string(BUILD_FILE, "core_tag", &tmp_build_engine_tag_name)){
+                            strncpy(tmp_buffer, tmp_build_engine_tag_name, sizeof(tmp_buffer) - 1);
+                            tmp_buffer[sizeof(tmp_buffer) - 1] = '\0'; // null terminate just in case
+                        } else {
+                            strncpy(tmp_buffer, YOYO_ENGINE_VERSION_STRING, sizeof(tmp_buffer) - 1);
+                            tmp_buffer[sizeof(tmp_buffer) - 1] = '\0'; // null terminate just in case
                         }
-                        strncpy(build_engine_tag_name, (char*)tmp_build_engine_tag_name, (size_t)sizeof(build_engine_tag_name) - 1);
-                        build_engine_tag_name[(size_t)sizeof(build_engine_tag_name) - 1] = '\0'; // null terminate just in case TODO: write helper?
+                        ye_version_tagify(tmp_buffer);
+                        strncpy(build_engine_tag_name, tmp_buffer, sizeof(build_engine_tag_name) - 1);
+                        build_engine_tag_name[sizeof(build_engine_tag_name) - 1] = '\0'; // null terminate just in case TODO: write helper?
 
                         /*
                             Platform
@@ -635,7 +641,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         strcpy((char*)build_rc_path,"");
                         strcpy((char*)build_platform,"linux");
                         build_platform_int = 0;
-                        ye_version_tagify(YOYO_ENGINE_VERSION_STRING, build_engine_tag_name);
+                        ye_version_tagify(build_engine_tag_name);
                     }
                 }
             }

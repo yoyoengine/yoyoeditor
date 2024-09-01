@@ -13,10 +13,11 @@
 #include <yoyoengine/yoyoengine.h>
 
 #include "editor_build.h"
+#include "editor_fs_ops.h"
 
 void editor_create_new_project(const char *target_dir) {
 
-    #ifdef __unix__ || __linux__
+    #if defined(__unix__) || defined(__linux__)
 
         // create path/to/proj/proj_name (aka target_dir)
         if(!editor_create_directory(target_dir)){
@@ -25,8 +26,8 @@ void editor_create_new_project(const char *target_dir) {
         }
         
         // get the tag we want to merge into
-        char *desired_tag;
-        ye_version_tagify(YOYO_ENGINE_VERSION_STRING, &desired_tag);
+        char *desired_tag = YOYO_ENGINE_VERSION_STRING;
+        ye_version_tagify(desired_tag);
 
         // in dev, clone main
         #ifdef ZOOGIES_DEVELOPMENT_BUILD

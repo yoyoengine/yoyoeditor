@@ -127,12 +127,12 @@ char **retrieve_build_args() {
     snprintf(args[0], strlen(game_name) + strlen("-DGAME_NAME=") + 1, "-DGAME_NAME=%s", game_name);
     snprintf(args[1], strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1, "-DGAME_RC_PATH=%s", game_rc_path);
     snprintf(args[2], strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1, "-DCMAKE_C_FLAGS=%s", cflags);
-    snprintf(args[3], 1, "\0");
+    args[3][0] = '\0';
     snprintf(args[4], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
-    snprintf(args[5], 1, "\0");
+    args[5][0] = '\0';
 
     if (strcmp(platform, "windows") != 0 && strcmp(platform, "emscripten") != 0) {
-        snprintf(args[6], 1, "\0");
+        args[6][0] = '\0';
     } else {
         snprintf(args[6], strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256, "-DCMAKE_TOOLCHAIN_FILE=%s/toolchains/%s.cmake", EDITOR_STATE.opened_project_path, platform);
         printf("toolchain file: %s\n", args[6]);

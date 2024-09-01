@@ -375,7 +375,7 @@ void group_welcome(struct nk_context *ctx) {
             json_t *message = json_object_get(commit_data, "message");
             json_t *sha = json_object_get(commit, "sha");
 
-            const char * shastr = json_string_value(json_object_get(commit, "sha"));
+            const char * shastr = json_string_value(sha);
             char sha_abbrv[8];
             strncpy(sha_abbrv, shastr, 7);
             sha_abbrv[7] = '\0';
@@ -452,7 +452,7 @@ void create_project_popup(struct nk_context *ctx) {
         if(nk_button_label(ctx, "Create")){
             ye_logf(info, "Create Project\n");
 
-            char new_proj_full_path[512];
+            char new_proj_full_path[1024];
             snprintf(new_proj_full_path, sizeof(new_proj_full_path), "%s/%s", new_proj_path, new_proj_name);
 
             editor_create_new_project(new_proj_full_path);
@@ -460,8 +460,8 @@ void create_project_popup(struct nk_context *ctx) {
             // set key in project cache
             json_t *project = json_object();
             json_object_set_new(project, "name", json_string(new_proj_name));
-            char stamp[11]; get_stamp_string(&stamp, sizeof(stamp));
-            json_object_set_new(project, "date", json_string(&stamp));
+            char stamp[11]; get_stamp_string(stamp, sizeof(stamp));
+            json_object_set_new(project, "date", json_string(stamp));
             json_object_set_new(project, "path", json_string(new_proj_full_path));
 
             json_t *projects = json_object_get(project_cache, "projects");
@@ -492,7 +492,7 @@ void group_projects(struct nk_context *ctx) {
 
         if(nk_button_image_label(ctx, editor_icons.style, "New", NK_TEXT_CENTERED)){
             create_project_popup_open = true;
-            snprintf(new_proj_name, sizeof(new_proj_name), "");
+            strcpy(new_proj_name, "");
         }
 
         if(nk_button_image_label(ctx, editor_icons.folder, "Open", NK_TEXT_CENTERED)){
@@ -536,7 +536,7 @@ void group_projects(struct nk_context *ctx) {
 
                 const char * name = json_string_value(json_object_get(settings, "name"));
 
-                char stamp[11]; get_stamp_string(&stamp, sizeof(stamp));
+                char stamp[11]; get_stamp_string(stamp, sizeof(stamp));
 
                 // set key in project cache
                 json_t *project = json_object();
@@ -610,7 +610,7 @@ void group_projects(struct nk_context *ctx) {
 
             const char *date_str = json_string_value(json_object_get(project, "date"));
             const char *name_str = json_string_value(json_object_get(project, "name"));
-            const char *path_str = json_string_value(json_object_get(project, "path"));
+            // const char *path_str = json_string_value(json_object_get(project, "path"));
 
             nk_layout_row_begin(ctx, NK_DYNAMIC, 30, 3);
 
@@ -627,8 +627,8 @@ void group_projects(struct nk_context *ctx) {
             if(nk_button_image_label(ctx, editor_icons.folder , "Open", NK_TEXT_CENTERED)){
                 ye_logf(debug, "Open Project\n");
 
-                char stamp[11]; get_stamp_string(&stamp, sizeof(stamp));
-                json_object_set_new(project, "date", json_string(&stamp));
+                char stamp[11]; get_stamp_string(stamp, sizeof(stamp));
+                json_object_set_new(project, "date", json_string(stamp));
                 
                 // move the opened project to the front of the list
                 // create copy of project
@@ -639,8 +639,8 @@ void group_projects(struct nk_context *ctx) {
 
                 // update again here since we moved stuff
                 project = json_array_get(projects, 0);
-                const char *date_str = json_string_value(json_object_get(project, "date"));
-                const char *name_str = json_string_value(json_object_get(project, "name"));
+                // const char *date_str = json_string_value(json_object_get(project, "date"));
+                // const char *name_str = json_string_value(json_object_get(project, "name"));
                 const char *path_str = json_string_value(json_object_get(project, "path"));
 
                 serialize_projects();
