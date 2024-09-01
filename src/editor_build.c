@@ -282,21 +282,22 @@ void editor_build(bool force_configure, bool should_run){
             snprintf(status, sizeof(status), "Running CMake ...");
             write(EDITOR_STATE.pipefd[1], status, strlen(status));
 
-            system(invoke);
+            if(system(invoke) != 0){
+                snprintf(status, sizeof(status), "error");
+                write(EDITOR_STATE.pipefd[1], status, strlen(status));
+                exit(0);
+            }
         }
 
         // run make
         snprintf(status, sizeof(status), "Running Make ...");
         write(EDITOR_STATE.pipefd[1], status, strlen(status));
 
-        system("make -j8");
-
-        // from ye_path(), execute cmake args ..
-        // printf(execv("cmake", args));
-        // if(!execvp("cmake", args)){
-            // ye_logf(error, "Failed to execute CMake.\n");
-            // exit(0);
-        // }
+        if(system("make -j8") != 0){
+            snprintf(status, sizeof(status), "error");
+            write(EDITOR_STATE.pipefd[1], status, strlen(status));
+            exit(0);
+        }
 
         snprintf(status, sizeof(status), "done");
         write(EDITOR_STATE.pipefd[1], status, strlen(status));

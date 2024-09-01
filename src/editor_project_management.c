@@ -27,7 +27,12 @@ void editor_create_new_project(const char *target_dir) {
         // get the tag we want to merge into
         char *desired_tag;
         ye_version_tagify(YOYO_ENGINE_VERSION_STRING, &desired_tag);
-        desired_tag = "main";
+
+        // in dev, clone main
+        #ifdef ZOOGIES_DEVELOPMENT_BUILD
+            // room to add local path to template later?
+            desired_tag = "main";
+        #endif
         
         // git clone with depth 1
         char git_clone_cmd[512];

@@ -300,6 +300,16 @@ void editor_editing_loop() {
                     int status;
                     waitpid(EDITOR_STATE.building_thread, &status, 0);
                 }
+                if(strcmp(buf, "error") == 0){
+                    close(EDITOR_STATE.pipefd[0]);
+                    EDITOR_STATE.is_building = false;
+
+                    // cleanup zombie process
+                    int status;
+                    waitpid(EDITOR_STATE.building_thread, &status, 0);
+
+                    ye_logf(error, "Build failed. Check the build log for more information.\n");
+                }
             }
             yoyo_loading_refresh(buf);
         }

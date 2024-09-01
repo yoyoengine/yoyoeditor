@@ -3,6 +3,7 @@
 ## Bump Versions
 
 - `yoyoengine/editor/include/editor.h`
+- `yoyoengine/editor/CMakeLists.txt`
 
 ## Create Tag
 

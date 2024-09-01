@@ -26,6 +26,19 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -g")
 # Define the source files for your project
 file(GLOB_RECURSE SOURCES CMAKE_CONFIGURE_DEPENDS "src/*.c")
 
+# we take in ZOOGIES_DEVELOPMENT_BUILD if we are
+# building locally outside of a normal release cycle
+if(ZOOGIES_DEVELOPMENT_BUILD)
+    add_compile_definitions(ZOOGIES_DEVELOPMENT_BUILD)
+
+    # this will only matter if we dont also pass YOYO_ENGINE_PATH,
+    # but that would be highly abnormal for a dev build since usually
+    # we are working on a dirty copy of the engine
+    set(ENGINE_GIT_TAG "main" CACHE STRING "")
+else()
+    set(ENGINE_GIT_TAG "build-0" CACHE STRING "")
+endif()
+
 # Check if the system is UNIX
 if(UNIX)
     # Define the output executable name and directory
@@ -41,21 +54,31 @@ if(UNIX)
     
     # Create the executable and link the engine library
     add_executable(${EXECUTABLE_NAME} ${SOURCES})
-
-    # Grab the engine from github
-    FetchContent_Declare(
-        yoyoengine
-        GIT_REPOSITORY https://github.com/yoyoengine/yoyoengine.git
-        GIT_TAG main
-        GIT_PROGRESS TRUE
-    )
-    
-    # A little jank... but it works
-    FetchContent_MakeAvailable(yoyoengine)
     
     # Check if YOYOENGINE_PATH is defined
     if(NOT DEFINED YOYO_ENGINE_PATH)
+        # Grab the engine from github
+        FetchContent_Declare(
+            yoyoengine
+            GIT_REPOSITORY https://github.com/yoyoengine/yoyoengine.git
+            GIT_TAG ${ENGINE_GIT_TAG}
+            GIT_PROGRESS TRUE
+        )
+        
+        # A little jank... but it works
+        FetchContent_MakeAvailable(yoyoengine)
         set(YOYO_ENGINE_PATH ${yoyoengine_SOURCE_DIR}/engine)
+    else()
+        # make YOYO_ENGINE_PATH absolute path relative to the current src dir
+        get_filename_component(YOYO_ENGINE_PATH ${YOYO_ENGINE_PATH} ABSOLUTE BASE_DIR ${CMAKE_SOURCE_DIR})
+
+        # print the engine path
+        message(STATUS "Using engine path: ${YOYO_ENGINE_PATH}")
+
+        # Check if the engine path exists
+        if(NOT EXISTS ${YOYO_ENGINE_PATH} OR NOT IS_DIRECTORY ${YOYO_ENGINE_PATH} OR NOT EXISTS ${YOYO_ENGINE_PATH}/CMakeLists.txt)
+            message(FATAL_ERROR "The engine path does not exist or is not a directory. Please check the path and try again.")
+        endif()
     endif()
     
     add_subdirectory(${YOYO_ENGINE_PATH} ${CMAKE_BINARY_DIR}/yoyoengine)
