@@ -88,16 +88,16 @@ char **retrieve_build_args() {
         return NULL;
     }
 
-    // weird clang double dec
+    // predeclare for the goto cleanup
     json_t *SETTINGS_FILE = NULL;
+    json_t *BUILD_FILE = NULL;
+
     SETTINGS_FILE = json_load_file(ye_path("settings.yoyo"), 0, NULL);
     if (SETTINGS_FILE == NULL) {
         ye_logf(error, "Failed to read settings file.\n");
         goto error;
     }
 
-    // weird clang double dec
-    json_t *BUILD_FILE = NULL;
     BUILD_FILE = json_load_file(ye_path("build.yoyo"), 0, NULL);
     if (BUILD_FILE == NULL) {
         ye_logf(error, "Failed to read build file.\n");
