@@ -105,7 +105,7 @@ if(UNIX)
         COMMAND ${CMAKE_COMMAND} -E make_directory
             "${EDITOR_BUILD_DIR}/resources"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/editor_resources" "${EDITOR_BUILD_DIR}/engine_resources"
+            "${CMAKE_SOURCE_DIR}/editor_resources" "${EDITOR_BUILD_DIR}/editor_resources"
     )
 else()
     message(FATAL_ERROR "The editor is only supported on Linux. If this is a dealbreaker for you, please open an Issue and I will port it. Probably.")

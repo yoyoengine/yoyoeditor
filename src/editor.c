@@ -78,9 +78,17 @@ char *editor_base_path = NULL;
 */
 
 char * editor_path(const char *subpath) {
-    static char path[1024];
+    static char path[2048];
 
     snprintf(path, sizeof(path), "%s/%s", editor_base_path, subpath);
+
+    return path;
+}
+
+char * editor_resources_path(const char *subpath) {
+    static char path[2048];
+
+    snprintf(path, sizeof(path), "%s/editor_resources/%s", editor_base_path, subpath);
 
     return path;
 }
@@ -356,34 +364,6 @@ int main(int argc, char **argv) {
     // init the engine. this starts the engine as thinking our editor directory is the game dir. this is ok beacuse we want to configure based off of the editor settings.json
     ye_init_engine();
 
-    // load editor icons //
-
-    #define INIT_EDITOR_TEXTURE(PATH, TEXTURE_VAR, ICON_FIELD) do {                     \
-        SDL_Surface *tmp_sur = IMG_Load(ye_get_engine_resource_static(PATH));           \
-        TEXTURE_VAR = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, tmp_sur); \
-        ICON_FIELD = nk_image_ptr(TEXTURE_VAR);                                         \
-        SDL_FreeSurface(tmp_sur);                                                       \
-    } while(0)
-
-    INIT_EDITOR_TEXTURE("edicon_style.png", style_tex, editor_icons.style);
-    INIT_EDITOR_TEXTURE("edicon_gear.png", gear_tex, editor_icons.gear);
-    INIT_EDITOR_TEXTURE("edicon_folder.png", folder_tex, editor_icons.folder);
-    INIT_EDITOR_TEXTURE("edicon_build.png", build_tex, editor_icons.build);
-    INIT_EDITOR_TEXTURE("edicon_trick.png", trick_tex, editor_icons.trick);
-    INIT_EDITOR_TEXTURE("edicon_play.png", play_tex, editor_icons.play);
-    INIT_EDITOR_TEXTURE("edicon_buildrun.png", buildrun_tex, editor_icons.buildrun);
-    INIT_EDITOR_TEXTURE("edicon_pack.png", pack_tex, editor_icons.pack);
-    INIT_EDITOR_TEXTURE("edicon_game.png", game_tex, editor_icons.game);
-    INIT_EDITOR_TEXTURE("edicon_eye.png", eye_tex, editor_icons.eye);
-    INIT_EDITOR_TEXTURE("edicon_buildreconfigure.png", buildreconfigure_tex, editor_icons.buildreconfigure);
-    INIT_EDITOR_TEXTURE("edicon_duplicate.png", duplicate_tex, editor_icons.duplicate);
-    INIT_EDITOR_TEXTURE("edicon_trash.png", trash_tex, editor_icons.trash);
-    INIT_EDITOR_TEXTURE("edicon_refresh.png", refresh_tex, editor_icons.refresh);
-
-    INIT_EDITOR_TEXTURE("lightheader.png", lightheader, editor_icons.lightheader);
-
-    ///////////////////////
-
     // get an initial screen size
     struct ScreenSize ss = ye_get_screen_size();
     screenWidth = ss.width; screenHeight = ss.height;
@@ -409,6 +389,34 @@ int main(int argc, char **argv) {
     snprintf(editor_settings_path, sizeof(editor_settings_path), "%s./editor.yoyo", editor_base_path);
 
     yoyo_loading_refresh("Reading editor settings...");
+
+    // load editor icons //
+
+    #define INIT_EDITOR_TEXTURE(PATH, TEXTURE_VAR, ICON_FIELD) do {                     \
+        SDL_Surface *tmp_sur = IMG_Load(editor_resources_path(PATH));                   \
+        TEXTURE_VAR = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, tmp_sur); \
+        ICON_FIELD = nk_image_ptr(TEXTURE_VAR);                                         \
+        SDL_FreeSurface(tmp_sur);                                                       \
+    } while(0)
+
+    INIT_EDITOR_TEXTURE("edicons/edicon_style.png", style_tex, editor_icons.style);
+    INIT_EDITOR_TEXTURE("edicons/edicon_gear.png", gear_tex, editor_icons.gear);
+    INIT_EDITOR_TEXTURE("edicons/edicon_folder.png", folder_tex, editor_icons.folder);
+    INIT_EDITOR_TEXTURE("edicons/edicon_build.png", build_tex, editor_icons.build);
+    INIT_EDITOR_TEXTURE("edicons/edicon_trick.png", trick_tex, editor_icons.trick);
+    INIT_EDITOR_TEXTURE("edicons/edicon_play.png", play_tex, editor_icons.play);
+    INIT_EDITOR_TEXTURE("edicons/edicon_buildrun.png", buildrun_tex, editor_icons.buildrun);
+    INIT_EDITOR_TEXTURE("edicons/edicon_pack.png", pack_tex, editor_icons.pack);
+    INIT_EDITOR_TEXTURE("edicons/edicon_game.png", game_tex, editor_icons.game);
+    INIT_EDITOR_TEXTURE("edicons/edicon_eye.png", eye_tex, editor_icons.eye);
+    INIT_EDITOR_TEXTURE("edicons/edicon_buildreconfigure.png", buildreconfigure_tex, editor_icons.buildreconfigure);
+    INIT_EDITOR_TEXTURE("edicons/edicon_duplicate.png", duplicate_tex, editor_icons.duplicate);
+    INIT_EDITOR_TEXTURE("edicons/edicon_trash.png", trash_tex, editor_icons.trash);
+    INIT_EDITOR_TEXTURE("edicons/edicon_refresh.png", refresh_tex, editor_icons.refresh);
+
+    INIT_EDITOR_TEXTURE("edicons/lightheader.png", lightheader, editor_icons.lightheader);
+
+    ///////////////////////
 
     /*
         Open the editor settings config.

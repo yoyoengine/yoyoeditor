@@ -462,12 +462,16 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     strncpy(project_window_title, (char*)tmp_project_window_title, (size_t)sizeof(project_window_title) - 1);
                     project_window_title[(size_t)sizeof(project_window_title) - 1] = '\0'; // null terminate just in case TODO: write helper?
 
+                    // TODO: this whole section is full of memory errors.
+                    // idk what type of crack you were smoking when you
+                    // wrote this lmao.
+
                     /*
                         Icon Path
                     */
                     const char * tmp_project_icon_path;
                     if(!ye_json_string(SETTINGS, "icon_path", &tmp_project_icon_path)){
-                        strcpy((char*)tmp_project_icon_path, "");
+                        tmp_project_icon_path = strdup("");
                     }
                     strncpy(project_icon_path, (char*)tmp_project_icon_path, (size_t)sizeof(project_icon_path) - 1);
 

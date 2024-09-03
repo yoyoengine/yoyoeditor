@@ -23,6 +23,9 @@
 // get the path to a resource from the editor install dir
 char * editor_path(const char *subpath);
 
+// get the path to a resource from the editor resources dir
+char * editor_resources_path(const char *subpath);
+
 /*
     Macros for marking dirty and saving status
 */
