@@ -109,17 +109,37 @@ char **retrieve_build_args() {
     const char *cflags = json_string_value(json_object_get(BUILD_FILE, "cflags"));
     const char *platform = json_string_value(json_object_get(BUILD_FILE, "platform"));
     const char *core_tag = json_string_value(json_object_get(BUILD_FILE, "core_tag"));
+    bool use_local_engine = json_boolean_value(json_object_get(BUILD_FILE, "use_local_engine"));
+    const char *local_engine_path = json_string_value(json_object_get(BUILD_FILE, "local_engine_path"));
 
-    if (!game_name || !game_rc_path || !cflags || !platform || !core_tag) {
+    if (!game_name || !game_rc_path || !cflags || !platform || !core_tag || !local_engine_path) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
         goto error;
     }
 
     args[0] = malloc(strlen(game_name) + strlen("-DGAME_NAME=") + 1);
-    args[1] = malloc(strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1);
+
+    // check if the rcpath is empty, if so dont include this arg
+    if(strlen(game_rc_path) == 0) {
+        args[1] = malloc(1);
+    }
+    else {
+        args[1] = malloc(strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1);
+    }
     args[2] = malloc(strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1);
-    args[3] = malloc(1); // used to be engine source dir, now reserved for future use
-    args[4] = malloc(strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
+    
+    /*
+        args[3] is either the engine source dir if we
+        want to use a local copy, or its the tag to pull from
+        with fetchcontent
+    */
+    if(use_local_engine) {
+        args[3] = malloc(strlen(local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1);
+    }
+    else {
+        args[3] = malloc(strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
+    }
+    args[4] = malloc(1); // Placeholder for future use
     args[5] = malloc(1); // Placeholder for future use
     args[6] = malloc(strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256);
 
@@ -129,10 +149,22 @@ char **retrieve_build_args() {
     }
 
     snprintf(args[0], strlen(game_name) + strlen("-DGAME_NAME=") + 1, "-DGAME_NAME=%s", game_name);
-    snprintf(args[1], strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1, "-DGAME_RC_PATH=%s", game_rc_path);
+
+    // check if the rcpath is empty, if so dont include this arg
+    if(strlen(game_rc_path) == 0) {
+        args[1][0] = '\0';
+    }
+    else {
+        snprintf(args[1], strlen(game_rc_path) + strlen("-DGAME_RC_PATH=") + 1, "-DGAME_RC_PATH=%s", game_rc_path);
+    }
     snprintf(args[2], strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1, "-DCMAKE_C_FLAGS=%s", cflags);
-    args[3][0] = '\0';
-    snprintf(args[4], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
+    if(use_local_engine) {
+        snprintf(args[3], strlen(local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1, "-DYOYO_ENGINE_SOURCE_DIR=\"%s\"", local_engine_path);
+    }
+    else {
+        snprintf(args[3], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
+    }
+    args[4][0] = '\0';
     args[5][0] = '\0';
 
     if (strcmp(platform, "windows") != 0 && strcmp(platform, "emscripten") != 0) {

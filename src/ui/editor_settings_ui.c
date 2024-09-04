@@ -52,6 +52,9 @@ int build_platform_int;
 int build_mode_int;
 char build_engine_tag_name[256];
 char build_rc_path[256];
+bool original_use_local_engine;
+bool use_local_engine;
+char local_engine_path[512];
 
 /*
     Helper functions
@@ -241,18 +244,6 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_label_colored(ctx, "Build Settings:", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
 
             /*
-                Engine tag (string input)
-
-                Determines the pulled core version of the engine when building
-            */
-            nk_layout_row_dynamic(ctx, 25, 2);
-            bounds = nk_widget_bounds(ctx);
-            nk_label(ctx, "Engine Tag Name:", NK_TEXT_LEFT);
-            if (nk_input_is_mouse_hovering_rect(in, bounds))
-                nk_tooltip(ctx, "The tag name of the engine you want to build against (ex: build-0).");
-            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, build_engine_tag_name, 256, nk_filter_default);
-
-            /*
                 Platform (dropdown)
             */
             nk_layout_row_dynamic(ctx, 25, 2);
@@ -307,6 +298,54 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             static const char *build_modes[] = {"debug", "release"};
             nk_combobox(ctx, build_modes, NK_LEN(build_modes), &build_mode_int, 25, nk_vec2(200,200));
 
+            /*
+                Advanced Build Settings
+            */
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_layout_row_dynamic(ctx, 25, 1);
+
+            nk_label(ctx, "Advanced Build Settings:", NK_TEXT_CENTERED);
+
+            // toggle for using local engine copy
+            nk_layout_row_dynamic(ctx, 25, 2);
+            nk_label(ctx, "", NK_TEXT_LEFT);
+            bounds = nk_widget_bounds(ctx);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "If disabled, the game will fetch the engine at the specified tag. If enabled, the game will use a supplied copy.");
+            nk_checkbox_label(ctx, "Use Local Engine Copy", (nk_bool*)&use_local_engine);
+
+            if(use_local_engine) {
+                // local engine path selector
+                nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
+                nk_layout_row_push(ctx, 0.5f);
+                nk_label(ctx, "Local Engine Path:", NK_TEXT_LEFT);
+                nk_layout_row_push(ctx, 0.43f);
+                nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, local_engine_path, 256, nk_filter_default);
+
+                nk_layout_row_push(ctx, 0.05f);
+                nk_layout_row_push(ctx, 0.06f);
+                if(nk_button_image(ctx, editor_icons.folder)){
+                    char *new_path = editor_file_dialog_select_folder();
+                    if(new_path != NULL){
+                        strncpy(local_engine_path, new_path, (size_t)sizeof(local_engine_path) - 1);
+                        free(new_path);
+                    }
+                }
+            }
+            else {
+                /*
+                    Engine tag (string input)
+
+                    Determines the pulled core version of the engine when building
+                */
+                nk_layout_row_dynamic(ctx, 25, 2);
+                bounds = nk_widget_bounds(ctx);
+                nk_label(ctx, "Engine Tag Name:", NK_TEXT_LEFT);
+                if (nk_input_is_mouse_hovering_rect(in, bounds))
+                    nk_tooltip(ctx, "The tag name of the engine you want to build against (ex: build-0).");
+                nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, build_engine_tag_name, 256, nk_filter_default);
+            }
+
             nk_layout_row_dynamic(ctx, 25, 1);
 
             // close button
@@ -346,7 +385,9 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(BUILD_FILE, "rc_path", json_string(build_rc_path));
                 json_object_set_new(BUILD_FILE, "platform", json_string(platforms[build_platform_int]));
                 json_object_set_new(BUILD_FILE, "core_tag", json_string(build_engine_tag_name));
-                json_object_set_new(BUILD_FILE, "delete_cache", json_boolean(original_build_platform_int != build_platform_int));
+                json_object_set_new(BUILD_FILE, "delete_cache", json_boolean((original_build_platform_int != build_platform_int) || (original_use_local_engine != use_local_engine)));
+                json_object_set_new(BUILD_FILE, "use_local_engine", json_boolean(use_local_engine));
+                json_object_set_new(BUILD_FILE, "local_engine_path", json_string(local_engine_path));
                 ye_json_write(ye_path("build.yoyo"),BUILD_FILE);
 
                 editor_saved();
@@ -638,6 +679,23 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         strncpy(build_platform, (char*)tmp_build_platform, (size_t)sizeof(build_platform) - 1);
                         build_platform[(size_t)sizeof(build_platform) - 1] = '\0'; // null terminate just in case TODO: write helper?
 
+                        /*
+                            Use local engine
+                        */
+                        if(!ye_json_bool(BUILD_FILE, "use_local_engine", &use_local_engine)){
+                            use_local_engine = false;
+                        }
+                        original_use_local_engine = use_local_engine;
+
+                        /*
+                            Local engine path
+                        */
+                        const char * tmp_local_engine_path;
+                        if(!ye_json_string(BUILD_FILE, "local_engine_path", &tmp_local_engine_path)){
+                            strcpy((char*)tmp_local_engine_path,"");
+                        }
+                        strncpy(local_engine_path, (char*)tmp_local_engine_path, (size_t)sizeof(local_engine_path) - 1);
+                        local_engine_path[(size_t)sizeof(local_engine_path) - 1] = '\0'; // null terminate just in case TODO: write helper?
                     }
                     else{
                         ye_logf(error, "build.yoyo not found.");
