@@ -761,7 +761,7 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
                             nk_property_double(ctx, "#", -1000000, &current->value.number, 1000000, 1, 5);
                             break;
                         case YE_LSG_STRING:
-                            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->value.string, 20, nk_filter_default);
+                            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->value.string, YE_LUA_SCRIPT_GLOBAL_VALUE_STRING_MAX_CHARACTERS, nk_filter_default);
                             break;
                         case YE_LSG_BOOL:
                             nk_checkbox_label(ctx, "", (int *)(&current->value.boolean));
