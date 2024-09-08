@@ -71,6 +71,7 @@ void _paint_transform(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_transform_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
             }
 
             nk_tree_pop(ctx);
@@ -429,6 +430,10 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_renderer_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+
+                nk_tree_pop(ctx);
+                return;
             }
 
             struct SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_RENDERER);
@@ -561,6 +566,9 @@ void _paint_camera(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_camera_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
             
             SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_CAMERA);
@@ -601,6 +609,9 @@ void _paint_collider(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_collider_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
             
             SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_COLLIDER);
@@ -641,6 +652,9 @@ void _paint_physics(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_physics_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
             
             nk_tree_pop(ctx);
@@ -676,6 +690,9 @@ void _paint_tag(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_tag_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
 
             nk_tree_pop(ctx);
@@ -835,6 +852,9 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_lua_script_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
             
             nk_tree_pop(ctx);
@@ -972,6 +992,10 @@ void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_audiosource_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+
+                nk_tree_pop(ctx);
+                return;
             }
             
             SDL_Rect circ = ye_get_position_rect(ent, YE_COMPONENT_AUDIOSOURCE);
@@ -1012,6 +1036,9 @@ void _paint_button(struct nk_context *ctx, struct ye_entity *ent){
             if(nk_button_label(ctx, "Remove Component")){
                 ye_remove_button_component(ent);
                 editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
             }
 
             SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_BUTTON);
