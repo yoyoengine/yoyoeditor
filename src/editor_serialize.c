@@ -121,6 +121,9 @@ void serialize_entity_renderer(struct ye_entity *entity, json_t *entity_json){
     // aspect ratio lock
     json_object_set_new(renderer, "lock aspect ratio", json_boolean(entity->renderer->lock_aspect_ratio));
 
+    // alpha
+    json_object_set_new(renderer, "alpha", json_integer(entity->renderer->alpha));
+
     // and now the fun part... the renderer specific impl
 
     // create impl object

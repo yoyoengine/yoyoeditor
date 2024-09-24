@@ -194,6 +194,9 @@ void editor_panel_scene_settings(struct nk_context *ctx){
                 json_object_set_new(music, "loop", json_boolean(scene_music_loop));
                 json_object_set_new(music, "volume", json_real(scene_music_volume));
             }
+            else{
+                json_object_del(_scene, "music");
+            }
 
             // write to file
             ye_json_write(ye_path_resources(YE_STATE.runtime.scene_file_path), SCENE);

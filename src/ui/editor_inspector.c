@@ -125,6 +125,10 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
             nk_property_int(ctx, "#z", -1000000, &ent->renderer->z, 1000000, 1, 5);
             nk_property_float(ctx, "#Rotation", -1000000, &ent->renderer->rotation, 1000000, 1, 5);
 
+            nk_layout_row_dynamic(ctx, 25, 2);
+            nk_property_int(ctx, "#alpha", 0, &ent->renderer->alpha, 255, 1, 5);
+            nk_label(ctx, "", NK_TEXT_CENTERED); // empty space
+
             if (nk_tree_push(ctx, NK_TREE_TAB, "Alignment", NK_MAXIMIZED))
             {
                 int i;
