@@ -128,6 +128,7 @@ void yoyo_loading_refresh(char * status)
     ye_system_input();
 
     // clear the screen
+    SDL_SetRenderDrawColor(YE_STATE.runtime.renderer, 0, 0, 0, 255);
     SDL_RenderClear(YE_STATE.runtime.renderer);
 
     SDL_RenderSetViewport(YE_STATE.runtime.renderer, NULL);
