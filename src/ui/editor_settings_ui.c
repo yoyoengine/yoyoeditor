@@ -12,7 +12,11 @@
 #include "editor_utils.h"
 #include "editor_fs_ops.h"
 #include <yoyoengine/yoyoengine.h>
-#include <unistd.h>
+#ifdef __linux__
+    #include <unistd.h>
+#else
+    #include <platform/windows/unistd.h>
+#endif
 
 /*
     INITIALIZE VARIABLES FOR JUST THIS FILE

@@ -8,7 +8,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
+#ifdef __linux__
+    #include <unistd.h>
+#else
+    #include <platform/windows/unistd.h>
+#endif
 #include <pwd.h>
 
 #include <Nuklear/nuklear.h>

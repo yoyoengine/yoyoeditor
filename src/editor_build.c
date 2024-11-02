@@ -9,7 +9,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#ifdef __linux__
+    #include <unistd.h>
+#else
+    #include <platform/windows/unistd.h>
+#endif
 #include <stdbool.h>
 #include <sys/wait.h>
 #include <fcntl.h>

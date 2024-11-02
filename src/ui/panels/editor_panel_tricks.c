@@ -19,7 +19,11 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <unistd.h>
+#ifdef __linux__
+    #include <unistd.h>
+#else
+    #include <platform/windows/unistd.h>
+#endif
 #include <dirent.h>
 #include <sys/stat.h>
 
