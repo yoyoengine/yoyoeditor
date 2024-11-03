@@ -96,10 +96,14 @@ else()
         message(FATAL_ERROR "The engine path does not exist or is not a directory. Please check the path and try again.")
     endif()
 endif()
-    
+
 add_subdirectory(${YOYO_ENGINE_PATH} ${CMAKE_BINARY_DIR}/yoyoengine)
 
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine)
+if(MSVC)
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine)
+else()
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine m)
+endif()
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
