@@ -99,7 +99,7 @@ endif()
     
 add_subdirectory(${YOYO_ENGINE_PATH} ${CMAKE_BINARY_DIR}/yoyoengine)
 
-target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine m)
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE yoyoengine)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
