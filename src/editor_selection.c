@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 
+#include <yoyoengine/tar_physics/solver.h>
 #include <yoyoengine/debug_renderer.h>
 #include <yoyoengine/ecs/ecs.h>
 #include <yoyoengine/utils.h>
@@ -83,11 +84,26 @@ void select_within(SDL_Rect zone){
     struct ye_entity_node * itr = transform_list_head;
     while(itr != NULL){
         struct ye_entity * ent = itr->entity;
+
+        if(!ent->active) {
+            itr = itr->next;
+            continue;
+        }
+
         struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_TRANSFORM);
         if(pos.x > zone.x && pos.y > zone.y &&
             pos.x + pos.w < zone.x + zone.w &&
             pos.y + pos.h < zone.y + zone.h){
             add_selection(ent);
+        }
+        else{
+            // check renderer for fallback
+            if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
+                struct ye_point_rectf sel = ye_rect_to_point_rectf(ye_convert_rect_rectf(zone));
+                if(ye_detect_rect_rect_collision(sel, ent->renderer->_world_rect)){
+                    add_selection(ent);
+                }
+            }
         }
         itr = itr->next;
     }
@@ -142,29 +158,35 @@ void editor_selection_handler(SDL_Event event){
                 struct ye_entity_node *itr = entity_list_head;
                 while(itr != NULL){
                     struct ye_entity * ent = itr->entity;
-                    struct ye_rectf pos;
+
+                    if(!ent->active) {
+                        itr = itr->next;
+                        continue;
+                    }
+
+                    struct ye_point_rectf pos;
+                    
                     if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
-                        pos = ye_get_position(ent, YE_COMPONENT_RENDERER);
+                        pos = ye_get_position2(ent, YE_COMPONENT_RENDERER);
                     }
                     else if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
-                        pos = ye_get_position(ent, YE_COMPONENT_COLLIDER);
+                        pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
                     }
                     else if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
-                        pos = ye_get_position(ent, YE_COMPONENT_AUDIOSOURCE);
+                        pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
                     }
                     else if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
-                        pos = ye_get_position(ent, YE_COMPONENT_CAMERA);
+                        pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);
                     }
                     else if(ye_component_exists(ent, YE_COMPONENT_TRANSFORM)){
-                        pos = ye_get_position(ent, YE_COMPONENT_TRANSFORM);
+                        pos = ye_get_position2(ent, YE_COMPONENT_TRANSFORM);
                     }
                     else{
                         itr = itr->next;
                         continue;
                     }
 
-                    if(mx > pos.x && my > pos.y &&
-                        mx < pos.x + pos.w && my < pos.y + pos.h){
+                    if(ye_pointf_in_point_rectf((struct ye_pointf){.x=mx, .y=my}, pos)){
                         add_selection(ent);
                         break;
                     }
@@ -202,6 +224,14 @@ void editor_selection_handler(SDL_Event event){
     }
 }
 
+SDL_Color purple = (SDL_Color){255, 0, 255, 225};
+SDL_Color red = (SDL_Color){255, 0, 0, 225};
+SDL_Color green = (SDL_Color){0, 255, 0, 225};
+SDL_Color blue = (SDL_Color){0, 0, 255, 225};
+SDL_Color orange = (SDL_Color){255, 165, 0, 225};
+SDL_Color yellow = (SDL_Color){255, 255, 0, 225};
+SDL_Color fade_yellow = (SDL_Color){255, 255, 0, 100};
+
 /*
     TODO: honestly, for selected entities we should always display their
     collider and audiosource bounds, and a box around renderer area if invisible.
@@ -224,27 +254,43 @@ void editor_render_selection_rects(){
         */
         struct ye_entity * ent = itr->ent;
 
-        SDL_Color select_color = (SDL_Color){255, 0, 255, 255};
+        // SDL_Color select_color = (SDL_Color){255, 0, 255, 255};
 
         if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
-            struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_RENDERER);
-            ye_debug_render_rect(pos.x, pos.y, pos.w, pos.h, select_color, 8);
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_RENDERER);
+            pos = ye_world_prectf_to_screen(pos);
+            ye_debug_render_prect(pos, green, 8);
         }
-        else if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
-            struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_COLLIDER);
-            ye_debug_render_rect(pos.x, pos.y, pos.w, pos.h, select_color, 8);
+        if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
+            pos = ye_world_prectf_to_screen(pos);
+            ye_debug_render_prect(pos, red, 8);
         }
-        else if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
-            struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_AUDIOSOURCE);
-            ye_debug_render_rect(pos.x, pos.y, pos.w, pos.h, select_color, 8);
+        if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
+            // pos = ye_world_prectf_to_screen(pos);
+
+            // calculate the center of the audio range
+            struct ye_pointf center = ye_point_rectf_center(pos);
+
+            ye_debug_render_circle(center.x, center.y, ent->audiosource->range.w, yellow, 8);
+            ye_debug_render_circle(center.x, center.y, ent->audiosource->range.h, fade_yellow, 8);
         }
-        else if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
-            struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_CAMERA);
-            ye_debug_render_rect(pos.x, pos.y, pos.w, pos.h, select_color, 8);
+        if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);
+            pos = ye_world_prectf_to_screen(pos);
+            ye_debug_render_prect(pos, purple, 8);
         }
-        else if(ye_component_exists(ent, YE_COMPONENT_TRANSFORM)){
-            struct ye_rectf pos = ye_get_position(ent, YE_COMPONENT_TRANSFORM);
-            ye_debug_render_rect(pos.x - 5, pos.y - 5, 10, 10, select_color, 8);
+        if(ye_component_exists(ent, YE_COMPONENT_BUTTON)){
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_BUTTON);
+            pos = ye_world_prectf_to_screen(pos);
+            ye_debug_render_prect(pos, blue, 8);
+        }
+        if(ye_component_exists(ent, YE_COMPONENT_TRANSFORM)){
+            vec2_t center = (vec2_t){.data={ent->transform->x, ent->transform->y}};
+            // center = lla_mat3_mult_vec2(YE_STATE.runtime.world2cam, center);
+
+            ye_debug_render_rect(center.data[0] - 5, center.data[1] - 5, 10, 10, orange, 8);
         }
 
         itr = itr->next;

@@ -454,8 +454,8 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
                 return;
             }
 
-            struct SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_RENDERER);
-            ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
+            // struct SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_RENDERER);
+            // ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
 
             nk_tree_pop(ctx);
         }
@@ -589,8 +589,8 @@ void _paint_camera(struct nk_context *ctx, struct ye_entity *ent){
                 return;
             }
             
-            SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_CAMERA);
-            ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
+            // SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_CAMERA);
+            // ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
 
             nk_tree_pop(ctx);
         }
@@ -677,16 +677,16 @@ void _paint_collider(struct nk_context *ctx, struct ye_entity *ent){
                 return;
             }
             
-            SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_COLLIDER);
-            if(ent->collider->type == YE_COLLIDER_RECT){
-                ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
-            }
-            else if(ent->collider->type == YE_COLLIDER_CIRCLE){
-                int radius = ent->collider->radius;
-                int x = bounds.x + radius;
-                int y = bounds.y + radius;
-                ye_debug_render_circle(x, y, radius, (SDL_Color){0, 255, 0, 128}, 8);
-            }
+            // SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_COLLIDER);
+            // if(ent->collider->type == YE_COLLIDER_RECT){
+            //     ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
+            // }
+            // else if(ent->collider->type == YE_COLLIDER_CIRCLE){
+            //     int radius = ent->collider->radius;
+            //     int x = bounds.x + radius;
+            //     int y = bounds.y + radius;
+            //     ye_debug_render_circle(x, y, radius, (SDL_Color){0, 255, 0, 128}, 8);
+            // }
 
             // TODO: paint triggers a different color?
 
@@ -1079,9 +1079,9 @@ void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
                 return;
             }
             
-            SDL_Rect circ = ye_get_position_rect(ent, YE_COMPONENT_AUDIOSOURCE);
-            ye_debug_render_circle(circ.x + (circ.w / 2), circ.y + (circ.w / 2), circ.w / 2, (SDL_Color){0, 255, 0, 128}, 8);
-            ye_debug_render_circle(circ.x + (circ.w / 2), circ.y + (circ.w / 2), circ.h / 2, (SDL_Color){128, 255, 0, 128}, 8);
+            // SDL_Rect circ = ye_get_position_rect(ent, YE_COMPONENT_AUDIOSOURCE);
+            // ye_debug_render_circle(circ.x + (circ.w / 2), circ.y + (circ.w / 2), circ.w / 2, (SDL_Color){0, 255, 0, 128}, 8);
+            // ye_debug_render_circle(circ.x + (circ.w / 2), circ.y + (circ.w / 2), circ.h / 2, (SDL_Color){128, 255, 0, 128}, 8);
 
             nk_tree_pop(ctx);
         }
@@ -1122,8 +1122,8 @@ void _paint_button(struct nk_context *ctx, struct ye_entity *ent){
                 return;
             }
 
-            SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_BUTTON);
-            ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
+            // SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_BUTTON);
+            // ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
             
             nk_tree_pop(ctx);
         }
