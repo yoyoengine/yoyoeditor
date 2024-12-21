@@ -266,6 +266,7 @@ SDL_Color blue = (SDL_Color){0, 0, 255, 225};
 SDL_Color orange = (SDL_Color){255, 165, 0, 225};
 SDL_Color yellow = (SDL_Color){255, 255, 0, 225};
 SDL_Color fade_yellow = (SDL_Color){255, 255, 0, 100};
+SDL_Color pink = (SDL_Color){255, 105, 180, 225};
 
 /*
     TODO: honestly, for selected entities we should always display their
@@ -292,9 +293,16 @@ void editor_render_selection_rects(){
         // SDL_Color select_color = (SDL_Color){255, 0, 255, 255};
 
         if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
+            // aligned
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_RENDERER);
             pos = ye_world_prectf_to_screen(pos);
             ye_debug_render_prect(pos, green, 8);
+            
+            // not aligned
+            ye_debug_render_prect(ent->renderer->_paintbounds_full_verts, pink, 8);
+
+            // render cached center point
+            ye_debug_render_rect(ent->renderer->_world_center.x - 5, ent->renderer->_world_center.y - 5, 10, 10, pink, 8);
         }
         if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);

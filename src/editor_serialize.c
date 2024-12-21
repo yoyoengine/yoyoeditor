@@ -108,6 +108,10 @@ void serialize_entity_renderer(struct ye_entity *entity, json_t *entity_json){
     json_object_set_new(renderer, "flipped_x", json_boolean(entity->renderer->flipped_x));
     json_object_set_new(renderer, "flipped_y", json_boolean(entity->renderer->flipped_y));
 
+    // center_x, center_y
+    json_object_set_new(renderer, "center_x", json_integer(entity->renderer->center.x));
+    json_object_set_new(renderer, "center_y", json_integer(entity->renderer->center.y));
+
     // set the z layer
     json_object_set_new(renderer, "z", json_integer(entity->renderer->z));
 

@@ -132,6 +132,17 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
             nk_checkbox_label(ctx, "Flipped X", (nk_bool*)&ent->renderer->flipped_x);
             nk_checkbox_label(ctx, "Flipped Y", (nk_bool*)&ent->renderer->flipped_y);
 
+            nk_layout_row_dynamic(ctx, 25, 3);
+            nk_layout_row_dynamic(ctx, 25, 3);
+            nk_property_int(ctx, "center x", -1000000, &ent->renderer->center.x, 1000000, 1, 5);
+            nk_property_int(ctx, "center y", -1000000, &ent->renderer->center.y, 1000000, 1, 5);
+            if(nk_button_label(ctx, "Auto Center")){
+                ent->renderer->center.x = ent->renderer->rect.w / 2;
+                ent->renderer->center.y = ent->renderer->rect.h / 2;
+                editor_unsaved();
+            }
+
+            nk_layout_row_dynamic(ctx, 25, 2);
             nk_layout_row_dynamic(ctx, 25, 2);
             // nk_label(ctx, "Alignment:", NK_TEXT_LEFT); TODO
             nk_property_int(ctx, "#z", -1000000, &ent->renderer->z, 1000000, 1, 5);
