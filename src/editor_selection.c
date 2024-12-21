@@ -159,39 +159,74 @@ void editor_selection_handler(SDL_Event event){
                 while(itr != NULL){
                     struct ye_entity * ent = itr->entity;
 
+                    // if ent is editor_camera or origin skip
+                    if(ent == editor_camera || ent == origin){
+                        itr = itr->next;
+                        continue;
+                    }
+
                     if(!ent->active) {
                         itr = itr->next;
                         continue;
                     }
 
+                    struct ye_pointf mp = {.x=mx, .y=my};
                     struct ye_point_rectf pos;
+                    bool prev_sel = already_selected(ent);
+                    bool selected = false;
                     
                     if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
                         pos = ye_get_position2(ent, YE_COMPONENT_RENDERER);
+                        if(ye_pointf_in_point_rectf(mp, pos)) {
+                            add_selection(ent);
+                            selected = true;
+                        }
                     }
-                    else if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
+                    if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
                         pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
+                        if(ye_pointf_in_point_rectf(mp, pos)) {
+                            add_selection(ent);
+                            selected = true;
+                        }
                     }
-                    else if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
+                    if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
                         pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
+
+                        float w = ent->audiosource->range.w;
+
+                        struct ye_rectf new = {pos.verticies[0].x - w, pos.verticies[0].y - w, w*2, w};
+                        pos = ye_rect_to_point_rectf(new);
+
+                        if(ye_pointf_in_point_rectf(mp, pos)) {
+                            add_selection(ent);
+                            selected = true;
+                        }
                     }
-                    else if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
+                    if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
                         pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);
+                        if(ye_pointf_in_point_rectf(mp, pos)) {
+                            add_selection(ent);
+                            selected = true;
+                        }
                     }
-                    else if(ye_component_exists(ent, YE_COMPONENT_TRANSFORM)){
-                        pos = ye_get_position2(ent, YE_COMPONENT_TRANSFORM);
-                    }
-                    else{
-                        itr = itr->next;
-                        continue;
+                    if(ye_component_exists(ent, YE_COMPONENT_BUTTON)){
+                        pos = ye_get_position2(ent, YE_COMPONENT_BUTTON);
+                        if(ye_pointf_in_point_rectf(mp, pos)) {
+                            add_selection(ent);
+                            selected = true;
+                        }
                     }
 
-                    if(ye_pointf_in_point_rectf((struct ye_pointf){.x=mx, .y=my}, pos)){
-                        add_selection(ent);
-                        break;
+                    /*
+                        If holding ctrl and the entity we selected is already selected, deselect it
+                    */
+                    if(prev_sel && selected && (SDL_GetModState() & KMOD_CTRL)){
+                        editor_deselect(ent);
                     }
 
+                    // skip trans because it has no area
                     itr = itr->next;
+                    continue;
                 }
             }
             break;
@@ -271,10 +306,21 @@ void editor_render_selection_rects(){
             // pos = ye_world_prectf_to_screen(pos);
 
             // calculate the center of the audio range
-            struct ye_pointf center = ye_point_rectf_center(pos);
+            // struct ye_pointf center = ye_point_rectf_center(pos);
 
-            ye_debug_render_circle(center.x, center.y, ent->audiosource->range.w, yellow, 8);
-            ye_debug_render_circle(center.x, center.y, ent->audiosource->range.h, fade_yellow, 8);
+            float max_range = ent->audiosource->range.w;
+            float min_range = ent->audiosource->range.h;
+
+            float x = pos.verticies[0].x;
+            float y = pos.verticies[0].y;
+
+            // ye_debug_render_circle(center.x, center.y, max_range, yellow, 8);
+            // ye_debug_render_circle(center.x, center.y, min_range, fade_yellow, 8);
+            ye_debug_render_circle(x, y, max_range, yellow, 8);
+            ye_debug_render_circle(x, y, min_range, fade_yellow, 8);
+
+            // ye_debug_render_circle(center.x - (max_range), center.y - (max_range), max_range, yellow, 8);
+            // ye_debug_render_circle(center.x - (min_range), center.y - (min_range), min_range, fade_yellow, 8);
         }
         if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);

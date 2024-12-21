@@ -1012,15 +1012,16 @@ void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
             nk_property_float(ctx, "#y", -1000000, &ent->audiosource->range.y, 1000000, 1, 5);
             nk_layout_row_dynamic(ctx, 25, 1);
             // save size before
-            float size = ent->audiosource->range.w;
+            // float size = ent->audiosource->range.w;
             nk_property_float(ctx, "#size", ent->audiosource->range.h, &ent->audiosource->range.w, 1000000, 1, 5);
             nk_property_float(ctx, "#falloff start", 0, &ent->audiosource->range.h, ent->audiosource->range.w, 1, 5);
 
-            // if the size changed, move the x and y to keep the center the same
-            if(size != ent->audiosource->range.w){
-                ent->audiosource->range.x -= (ent->audiosource->range.w - size) / 2;
-                ent->audiosource->range.y -= (ent->audiosource->range.w - size) / 2;
-            }
+            // not needed after Lilith integration
+            // // if the size changed, move the x and y to keep the center the same
+            // if(size != ent->audiosource->range.w){
+            //     ent->audiosource->range.x -= (ent->audiosource->range.w - size) / 2;
+            //     ent->audiosource->range.y -= (ent->audiosource->range.w - size) / 2;
+            // }
 
             if(!ent->audiosource->simulated && !_audiosource_disabled)
                 nk_widget_disable_end(ctx);
