@@ -202,13 +202,14 @@ void editor_selection_handler(SDL_Event event){
                             selected = true;
                         }
                     }
-                    if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
-                        pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);
-                        if(ye_pointf_in_point_rectf(mp, pos)) {
-                            add_selection(ent);
-                            selected = true;
-                        }
-                    }
+                    // just ignore cameras because it's too annoying
+                    // if(ye_component_exists(ent, YE_COMPONENT_CAMERA)){
+                    //     pos = ye_get_position2(ent, YE_COMPONENT_CAMERA);
+                    //     if(ye_pointf_in_point_rectf(mp, pos)) {
+                    //         add_selection(ent);
+                    //         selected = true;
+                    //     }
+                    // }
                     if(ye_component_exists(ent, YE_COMPONENT_BUTTON)){
                         pos = ye_get_position2(ent, YE_COMPONENT_BUTTON);
                         if(ye_pointf_in_point_rectf(mp, pos)) {
