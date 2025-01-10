@@ -1,6 +1,6 @@
 /*
     This file is a part of yoyoengine. (https://github.com/zoogies/yoyoengine)
-    Copyright (C) 2023  Ryan Zmuda
+    Copyright (C) 2023-2025  Ryan Zmuda
 
     Licensed under the MIT license. See LICENSE file in the project root for details.
 */
@@ -208,55 +208,19 @@ void serialize_entity_rigidbody(struct ye_entity *entity, json_t *entity_json){
     // create the rigidbody object
     json_t *rigidbody = json_object();
 
-    json_object_set_new(rigidbody, "active", json_boolean(entity->rigidbody->active));
-    json_object_set_new(rigidbody, "mass", json_real(entity->rigidbody->mass));
-    json_object_set_new(rigidbody, "restitution", json_real(entity->rigidbody->restitution));
-    json_object_set_new(rigidbody, "kinematic_friction", json_real(entity->rigidbody->kinematic_friction));
-    json_object_set_new(rigidbody, "rotational_kinematic_friction", json_real(entity->rigidbody->rotational_kinematic_friction));
+    (void)entity;
 
-    json_object_set_new(rigidbody, "vx", json_real(entity->rigidbody->velocity.x));
-    json_object_set_new(rigidbody, "vy", json_real(entity->rigidbody->velocity.y));
-    json_object_set_new(rigidbody, "vr", json_real(entity->rigidbody->rotational_velocity));
+    // json_object_set_new(rigidbody, "active", json_boolean(entity->rigidbody->active));
+    // json_object_set_new(rigidbody, "mass", json_real(entity->rigidbody->mass));
+    // json_object_set_new(rigidbody, "restitution", json_real(entity->rigidbody->restitution));
+    // json_object_set_new(rigidbody, "kinematic_friction", json_real(entity->rigidbody->kinematic_friction));
+    // json_object_set_new(rigidbody, "rotational_kinematic_friction", json_real(entity->rigidbody->rotational_kinematic_friction));
+
+    // json_object_set_new(rigidbody, "vx", json_real(entity->rigidbody->velocity.x));
+    // json_object_set_new(rigidbody, "vy", json_real(entity->rigidbody->velocity.y));
+    // json_object_set_new(rigidbody, "vr", json_real(entity->rigidbody->rotational_velocity));
 
     json_object_set_new(entity_json, "rigidbody", rigidbody);
-}
-
-void serialize_entity_collider(struct ye_entity *entity, json_t *entity_json){
-    // create the collider object
-    json_t *collider = json_object();
-
-    // set the active state
-    json_object_set_new(collider, "active", json_boolean(entity->collider->active));
-
-    // collider type
-    json_object_set_new(collider, "type", json_integer(entity->collider->type));
-
-    json_object_set_new(collider, "x", json_real(entity->collider->x));
-    json_object_set_new(collider, "y", json_real(entity->collider->y));
-
-    // union of collider type impl
-    json_t *impl = json_object();
-    switch(entity->collider->type){
-        case YE_COLLIDER_RECT:
-            json_object_set_new(impl, "w", json_real(entity->collider->width));
-            json_object_set_new(impl, "h", json_real(entity->collider->height));
-            break;
-        case YE_COLLIDER_CIRCLE:
-            json_object_set_new(impl, "radius", json_real(entity->collider->radius));
-            break;
-        default:
-            ye_logf(warning, "ermmm... this shouldnt have happend!");
-    }
-    json_object_set_new(collider, "impl", impl);
-
-    // set the is trigger
-    json_object_set_new(collider, "is trigger", json_boolean(entity->collider->is_trigger));
-
-    // set the relativity
-    json_object_set_new(collider, "relative", json_boolean(entity->collider->relative));
-
-    // add the collider object to the entity json
-    json_object_set_new(entity_json, "collider", collider);
 }
 
 void serialize_entity_tag(struct ye_entity *entity, json_t *entity_json){
@@ -438,10 +402,6 @@ void editor_write_scene_to_disk(const char *path){
 
         if(entity->rigidbody != NULL){
             serialize_entity_rigidbody(entity, json_object_get(entity_json, "components"));
-        }
-
-        if(entity->collider != NULL){
-            serialize_entity_collider(entity, json_object_get(entity_json, "components"));
         }
 
         if(entity->tag != NULL){

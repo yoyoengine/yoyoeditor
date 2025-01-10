@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.h": "c",
+        "*.yoyo": "json",
+        "typeinfo": "c"
+    }
+}

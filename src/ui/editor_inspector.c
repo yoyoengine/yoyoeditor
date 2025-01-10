@@ -1,6 +1,6 @@
 /*
     This file is a part of yoyoengine. (https://github.com/zoogies/yoyoengine)
-    Copyright (C) 2023  Ryan Zmuda
+    Copyright (C) 2023-2025  Ryan Zmuda
 
     Licensed under the MIT license. See LICENSE file in the project root for details.
 */
@@ -619,138 +619,40 @@ void _paint_camera(struct nk_context *ctx, struct ye_entity *ent){
     }
 }
 
-void _paint_collider(struct nk_context *ctx, struct ye_entity *ent){
-    if(ent->collider != NULL){
-        if(nk_tree_push(ctx, NK_TREE_TAB, "Collider", NK_MAXIMIZED)){
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->collider->active);
-            nk_checkbox_label(ctx, "Relative", (nk_bool*)&ent->collider->relative);
-            
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_checkbox_label(ctx, "Is Trigger", (nk_bool*)&ent->collider->is_trigger);
-            
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "#x", -1000000, &ent->collider->x, 1000000, 1, 5);
-            nk_property_float(ctx, "#y", -1000000, &ent->collider->y, 1000000, 1, 5);
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_label(ctx, "Collider Type:", NK_TEXT_CENTERED);
-
-            static const char *collider_type_items[] = {"Rectangle", "Circle"};
-            enum ye_collider_type old_type = ent->collider->type;
-            ent->collider->type = nk_combo(ctx, collider_type_items, 2, ent->collider->type, 25, nk_vec2(200,200));
-
-            if(old_type != ent->collider->type){
-                // we need to change the collider type
-                if(ent->collider->type == YE_COLLIDER_RECT){
-                    // we need to convert the circle to a rect
-                    int radius = ent->collider->radius;
-                    ent->collider->width = radius * 2;
-                    ent->collider->height = radius * 2;
-                    ent->collider->x -= radius;
-                    ent->collider->y -= radius;
-                }
-                else if(ent->collider->type == YE_COLLIDER_CIRCLE){
-                    // we need to convert the rect to a circle
-                    int width = ent->collider->width;
-                    ent->collider->radius = width / 2;
-                    ent->collider->x += ent->collider->radius;
-                    ent->collider->y += ent->collider->radius;
-                }
-                editor_unsaved();
-            }
-            nk_layout_row_dynamic(ctx, 25, 1);
-
-            switch(ent->collider->type) {
-                case YE_COLLIDER_RECT:
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    nk_property_float(ctx, "#w", 0, &ent->collider->width, 1000000, 1, 5);
-                    nk_property_float(ctx, "#h", 0, &ent->collider->height, 1000000, 1, 5);
-                    break;
-                case YE_COLLIDER_CIRCLE:
-                    nk_label(ctx, "Circle Collider", NK_TEXT_CENTERED);
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_property_float(ctx, "#r", 0, &ent->collider->radius, 1000000, 1, 5);
-                    break;
-                default:
-                    nk_label(ctx, "!!!Corrupted - NO TYPE!!!", NK_TEXT_CENTERED);
-                    break;
-            }
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if(nk_button_label(ctx, "Remove Component")){
-                ye_remove_collider_component(ent);
-                editor_unsaved();
-                editor_deselect_all();
-                nk_tree_pop(ctx);
-                return;
-            }
-            
-            // SDL_Rect bounds = ye_get_position_rect(ent, YE_COMPONENT_COLLIDER);
-            // if(ent->collider->type == YE_COLLIDER_RECT){
-            //     ye_debug_render_rect(bounds.x, bounds.y, bounds.w, bounds.h, (SDL_Color){0, 255, 0, 128}, 8);
-            // }
-            // else if(ent->collider->type == YE_COLLIDER_CIRCLE){
-            //     int radius = ent->collider->radius;
-            //     int x = bounds.x + radius;
-            //     int y = bounds.y + radius;
-            //     ye_debug_render_circle(x, y, radius, (SDL_Color){0, 255, 0, 128}, 8);
-            // }
-
-            // TODO: paint triggers a different color?
-
-            nk_tree_pop(ctx);
-        }
-    }
-    else{
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_label_colored(ctx, "No collider component", NK_TEXT_CENTERED, nk_rgb(255, 255, 0));
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        if(nk_button_label(ctx, "Add Collider Component")){
-            ye_add_static_rect_collider_component(ent, 0, 0, 0, 0);
-            editor_unsaved();
-        }
-    }
-}
-
 void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
     if(ent->rigidbody != NULL) {
-        if(nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MAXIMIZED)) {
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->rigidbody->active);
+        // if(nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MAXIMIZED)) {
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->rigidbody->active);
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "#Mass", 0, &ent->rigidbody->mass, 1000000, 1, 5);
-            nk_property_float(ctx, "#Restitution", 0, &ent->rigidbody->restitution, 1000000, 1, 5);
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     nk_layout_row_dynamic(ctx, 25, 2);
+        //     nk_property_float(ctx, "#Mass", 0, &ent->rigidbody->mass, 1000000, 1, 5);
+        //     nk_property_float(ctx, "#Restitution", 0, &ent->rigidbody->restitution, 1000000, 1, 5);
         
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "#Friction", 0, &ent->rigidbody->kinematic_friction, 1000000, 1, 5);
-            nk_property_float(ctx, "#Rot Fric", 0, &ent->rigidbody->rotational_kinematic_friction, 1000000, 1, 5);
+        //     nk_layout_row_dynamic(ctx, 25, 2);
+        //     nk_property_float(ctx, "#Friction", 0, &ent->rigidbody->kinematic_friction, 1000000, 1, 5);
+        //     nk_property_float(ctx, "#Rot Fric", 0, &ent->rigidbody->rotational_kinematic_friction, 1000000, 1, 5);
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "#vx", -1000000, &ent->rigidbody->velocity.x, 1000000, 1, 5);
-            nk_property_float(ctx, "#vy", -1000000, &ent->rigidbody->velocity.y, 1000000, 1, 5);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_property_float(ctx, "#rx", -1000000, &ent->rigidbody->rotational_velocity, 1000000, 1, 5);
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     nk_layout_row_dynamic(ctx, 25, 2);
+        //     nk_property_float(ctx, "#vx", -1000000, &ent->rigidbody->velocity.x, 1000000, 1, 5);
+        //     nk_property_float(ctx, "#vy", -1000000, &ent->rigidbody->velocity.y, 1000000, 1, 5);
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     nk_property_float(ctx, "#rx", -1000000, &ent->rigidbody->rotational_velocity, 1000000, 1, 5);
         
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if(nk_button_label(ctx, "Remove Component")){
-                ye_remove_rigidbody_component(ent);
-                editor_unsaved();
-                editor_deselect_all();
-                nk_tree_pop(ctx);
-                return;
-            }
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     nk_layout_row_dynamic(ctx, 25, 1);
+        //     if(nk_button_label(ctx, "Remove Component")){
+        //         // ye_remove_rigidbody_component(ent);
+        //         editor_unsaved();
+        //         editor_deselect_all();
+        //         nk_tree_pop(ctx);
+        //         return;
+        //     }
 
-            nk_tree_pop(ctx);
-        }
+        //     nk_tree_pop(ctx);
+        // }
     }
     else {
         nk_layout_row_dynamic(ctx, 25, 1);
@@ -759,7 +661,7 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
         nk_layout_row_dynamic(ctx, 25, 1);
         nk_layout_row_dynamic(ctx, 25, 1);
         if(nk_button_label(ctx, "Add Rigidbody Component")){
-            ye_add_rigidbody_component(ent, 0, 0, 0, 0);
+            // ye_add_rigidbody_component(ent, 0, 0, 0, 0);
             editor_unsaved();
         }
     }
@@ -1165,21 +1067,18 @@ bool comp_exists(int i, struct ye_entity *ent){
             return ent->camera != NULL;
             break;
         case 3:
-            return ent->collider != NULL;
-            break;
-        case 4:
             return ent->rigidbody != NULL;
             break;
-        case 5:
+        case 4:
             return ent->tag != NULL;
             break;
-        case 6:
+        case 5:
             return ent->lua_script != NULL;
             break;
-        case 7:
+        case 6:
             return ent->audiosource != NULL;
             break;
-        case 8:
+        case 7:
             return ent->button != NULL;
             break;
         default:
@@ -1321,7 +1220,7 @@ void ye_editor_paint_inspector(struct nk_context *ctx){
                     Selector tile layout thing that shows all components in list
                 */
                 static int current_component_inspector_tab = 0;
-                const char *names[] = {"Transform", "Renderer", "Camera","Collider","Rigidbody","Tag","Script","Audio Source","Button"};
+                const char *names[] = {"Transform", "Renderer", "Camera","Rigidbody","Tag","Script","Audio Source","Button"};
                 static int num_components = sizeof(names) / sizeof(names[0]); // does this mean its only computed here once?
 
                 nk_style_push_vec2(ctx, &ctx->style.window.spacing, nk_vec2(0,0));
@@ -1362,22 +1261,19 @@ void ye_editor_paint_inspector(struct nk_context *ctx){
                     case 2: // camera //
                         _paint_camera(ctx,ent);
                         break;
-                    case 3: // collider //
-                        _paint_collider(ctx,ent);
-                        break;
-                    case 4: // rigidbody //
+                    case 3: // rigidbody //
                         _paint_rigidbody(ctx,ent);
                         break;
-                    case 5: // tag //
+                    case 4: // tag //
                         _paint_tag(ctx,ent);
                         break;
-                    case 6: // script //
+                    case 5: // script //
                         _paint_script(ctx,ent);
                         break;
-                    case 7: // audiosource //
+                    case 6: // audiosource //
                         _paint_audiosource(ctx,ent);
                         break;
-                    case 8: // button //
+                    case 7: // button //
                         _paint_button(ctx,ent);
                         break;
                 }

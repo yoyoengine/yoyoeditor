@@ -1,13 +1,14 @@
 /*
     This file is a part of yoyoengine. (https://github.com/zoogies/yoyoengine)
-    Copyright (C) 2024  Ryan Zmuda
+    Copyright (C) 2023-2025  Ryan Zmuda
 
     Licensed under the MIT license. See LICENSE file in the project root for details.
 */
 
 #include <stdbool.h>
 
-#include <yoyoengine/tar_physics/solver.h>
+#include <p2d/p2d.h>
+
 #include <yoyoengine/debug_renderer.h>
 #include <yoyoengine/ecs/ecs.h>
 #include <yoyoengine/utils.h>
@@ -100,7 +101,9 @@ void select_within(SDL_Rect zone){
             // check renderer for fallback
             if(ye_component_exists(ent, YE_COMPONENT_RENDERER)){
                 struct ye_point_rectf sel = ye_rect_to_point_rectf(ye_convert_rect_rectf(zone));
-                if(ye_detect_rect_rect_collision(sel, ent->renderer->_world_rect)){
+                struct p2d_obb_verts sel_obb = ye_prect2obbverts(sel);
+                struct p2d_obb_verts world_obb = ye_prect2obbverts(ent->renderer->_world_rect);
+                if(p2d_obb_verts_intersects_obb_verts(sel_obb, world_obb)){
                     add_selection(ent);
                 }
             }
@@ -182,13 +185,13 @@ void editor_selection_handler(SDL_Event event){
                             selected = true;
                         }
                     }
-                    if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
-                        pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
-                        if(ye_pointf_in_point_rectf(mp, pos)) {
-                            add_selection(ent);
-                            selected = true;
-                        }
-                    }
+                    // if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
+                    //     pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
+                    //     if(ye_pointf_in_point_rectf(mp, pos)) {
+                    //         add_selection(ent);
+                    //         selected = true;
+                    //     }
+                    // } //TODO: ye_component rigidbody
                     if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
                         pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
 
@@ -305,11 +308,11 @@ void editor_render_selection_rects(){
             // render cached center point
             ye_debug_render_rect(ent->renderer->_world_center.x - 5, ent->renderer->_world_center.y - 5, 10, 10, pink, 8);
         }
-        if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
-            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
-            pos = ye_world_prectf_to_screen(pos);
-            ye_debug_render_prect(pos, red, 8);
-        }
+        // if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
+        //     struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
+        //     pos = ye_world_prectf_to_screen(pos);
+        //     ye_debug_render_prect(pos, red, 8);
+        // } TODO rigidbody
         if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
             // pos = ye_world_prectf_to_screen(pos);
