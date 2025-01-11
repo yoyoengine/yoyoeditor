@@ -208,18 +208,34 @@ void serialize_entity_rigidbody(struct ye_entity *entity, json_t *entity_json){
     // create the rigidbody object
     json_t *rigidbody = json_object();
 
-    (void)entity;
+    json_object_set_new(rigidbody, "active", json_boolean(entity->rigidbody->active));
 
-    // json_object_set_new(rigidbody, "active", json_boolean(entity->rigidbody->active));
-    // json_object_set_new(rigidbody, "mass", json_real(entity->rigidbody->mass));
-    // json_object_set_new(rigidbody, "restitution", json_real(entity->rigidbody->restitution));
-    // json_object_set_new(rigidbody, "kinematic_friction", json_real(entity->rigidbody->kinematic_friction));
-    // json_object_set_new(rigidbody, "rotational_kinematic_friction", json_real(entity->rigidbody->rotational_kinematic_friction));
+    json_object_set_new(rigidbody, "transform_offset_x", json_real(entity->rigidbody->transform_offset_x));
+    json_object_set_new(rigidbody, "transform_offset_y", json_real(entity->rigidbody->transform_offset_y));
 
-    // json_object_set_new(rigidbody, "vx", json_real(entity->rigidbody->velocity.x));
-    // json_object_set_new(rigidbody, "vy", json_real(entity->rigidbody->velocity.y));
-    // json_object_set_new(rigidbody, "vr", json_real(entity->rigidbody->rotational_velocity));
+    // p2d object
+    json_t *p2d_object = json_object();
 
+    json_object_set_new(p2d_object, "type", json_integer(entity->rigidbody->p2d_object.type));
+    json_object_set_new(p2d_object, "is_static", json_boolean(entity->rigidbody->p2d_object.is_static));
+    json_object_set_new(p2d_object, "is_trigger", json_boolean(entity->rigidbody->p2d_object.is_trigger));
+    json_object_set_new(p2d_object, "vx", json_real(entity->rigidbody->p2d_object.vx));
+    json_object_set_new(p2d_object, "vy", json_real(entity->rigidbody->p2d_object.vy));
+    json_object_set_new(p2d_object, "vr", json_real(entity->rigidbody->p2d_object.vr));
+    json_object_set_new(p2d_object, "mass", json_real(entity->rigidbody->p2d_object.mass));
+    json_object_set_new(p2d_object, "restitution", json_real(entity->rigidbody->p2d_object.restitution));
+    
+    switch(entity->rigidbody->p2d_object.type) {
+        case P2D_OBJECT_RECTANGLE:
+            json_object_set_new(p2d_object, "width", json_real(entity->rigidbody->p2d_object.rectangle.width));
+            json_object_set_new(p2d_object, "height", json_real(entity->rigidbody->p2d_object.rectangle.height));
+            break;
+        case P2D_OBJECT_CIRCLE:
+            json_object_set_new(p2d_object, "radius", json_real(entity->rigidbody->p2d_object.circle.radius));
+            break;
+    }
+
+    json_object_set_new(rigidbody, "p2d_object", p2d_object);
     json_object_set_new(entity_json, "rigidbody", rigidbody);
 }
 

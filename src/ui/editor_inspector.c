@@ -12,6 +12,7 @@
 #else
     #include <platform/windows/unistd.h>
 #endif
+#include <p2d/p2d.h>
 #include <yoyoengine/yoyoengine.h>
 #include "editor.h"
 #include "editor_ui.h"
@@ -621,38 +622,100 @@ void _paint_camera(struct nk_context *ctx, struct ye_entity *ent){
 
 void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
     if(ent->rigidbody != NULL) {
-        // if(nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MAXIMIZED)) {
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->rigidbody->active);
+        if(nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MAXIMIZED)) {
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->rigidbody->active);
 
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     nk_layout_row_dynamic(ctx, 25, 2);
-        //     nk_property_float(ctx, "#Mass", 0, &ent->rigidbody->mass, 1000000, 1, 5);
-        //     nk_property_float(ctx, "#Restitution", 0, &ent->rigidbody->restitution, 1000000, 1, 5);
+            nk_layout_row_dynamic(ctx, 25, 2);
+            nk_property_float(ctx, "#offset x", -1000000, &ent->rigidbody->transform_offset_x, 1000000, 1, 5);
+            nk_property_float(ctx, "#offset y", -1000000, &ent->rigidbody->transform_offset_y, 1000000, 1, 5);
+            nk_layout_row_dynamic(ctx, 25, 1);
+
+            // const struct nk_input *in = &ctx->input;
+            // struct nk_rect bounds;
+
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody Properties", NK_MAXIMIZED)) {
+                nk_layout_row_dynamic(ctx, 25, 2);
+                
+                // bounds = nk_widget_bounds(ctx);
+                nk_checkbox_label(ctx, "Static", (int *)(&ent->rigidbody->p2d_object.is_static));
+                // if (nk_input_is_mouse_hovering_rect(in, bounds))
+                    // nk_tooltip(ctx, "If checked, the object will not move or be affected by forces");
+                
+                // bounds = nk_widget_bounds(ctx);
+                nk_checkbox_label(ctx, "Trigger", (int *)(&ent->rigidbody->p2d_object.is_trigger));
+                // if (nk_input_is_mouse_hovering_rect(in, bounds))
+                    // nk_tooltip(ctx, "Will be uncollidable, but emit events when collided with");
+
+                nk_layout_row_dynamic(ctx, 25, 2);
+                nk_property_float(ctx, "#mass", 0.0000001, &ent->rigidbody->p2d_object.mass, 1000000, 1, 5);
+                nk_property_float(ctx, "#restitution", 0.0000001, &ent->rigidbody->p2d_object.restitution, 1, 0.01, 0.01);
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_layout_row_dynamic(ctx, 25, 3);
+                nk_property_float(ctx, "#vel x", -1000000, &ent->rigidbody->p2d_object.vx, 1000000, 1, 5);
+                nk_property_float(ctx, "#vel y", -1000000, &ent->rigidbody->p2d_object.vy, 1000000, 1, 5);
+                nk_property_float(ctx, "#vel ang", -1000000, &ent->rigidbody->p2d_object.vr, 1000000, 1, 5);
+
+                nk_tree_pop(ctx);
+            }
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody Collider", NK_MAXIMIZED)) {
+                static const char *collider_types[] = {"Circle", "Rectangle"};
+                static int selected_collider_type = 0;
+
+                nk_layout_row_dynamic(ctx, 25, 2);
+                nk_label(ctx, "Collider Type:", NK_TEXT_LEFT);
+                int prev_selected_collider_type = selected_collider_type;
+                selected_collider_type = nk_combo(ctx, collider_types, 2, selected_collider_type, 25, nk_vec2(200,200));
+
+                if(selected_collider_type != prev_selected_collider_type){
+                    // reset the collider to default values
+                    switch(selected_collider_type) {
+                        case 0: // Circle
+                            ent->rigidbody->p2d_object.circle.radius = 0;
+                            break;
+                        case 1: // Rectangle
+                            ent->rigidbody->p2d_object.rectangle.width = 0;
+                            ent->rigidbody->p2d_object.rectangle.height = 0;
+                            break;
+                    }
+                    editor_unsaved();
+                }
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                switch(selected_collider_type) {
+                    case 0: // Circle
+                        ent->rigidbody->p2d_object.type = P2D_OBJECT_CIRCLE;
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_property_float(ctx, "#radius", 0.0000001, &ent->rigidbody->p2d_object.circle.radius, 1000000, 1, 5);
+                        break;
+                    case 1: // Rectangle
+                        ent->rigidbody->p2d_object.type = P2D_OBJECT_RECTANGLE;
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_property_float(ctx, "#width", 0.0000001, &ent->rigidbody->p2d_object.rectangle.width, 1000000, 1, 5);
+                        nk_property_float(ctx, "#height", 0.0000001, &ent->rigidbody->p2d_object.rectangle.height, 1000000, 1, 5);
+                        break;
+                }
+
+
+                nk_tree_pop(ctx);
+            }
         
-        //     nk_layout_row_dynamic(ctx, 25, 2);
-        //     nk_property_float(ctx, "#Friction", 0, &ent->rigidbody->kinematic_friction, 1000000, 1, 5);
-        //     nk_property_float(ctx, "#Rot Fric", 0, &ent->rigidbody->rotational_kinematic_friction, 1000000, 1, 5);
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if(nk_button_label(ctx, "Remove Component")){
+                ye_remove_rigidbody_component(ent);
+                editor_unsaved();
+                editor_deselect_all();
+                nk_tree_pop(ctx);
+                return;
+            }
 
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     nk_layout_row_dynamic(ctx, 25, 2);
-        //     nk_property_float(ctx, "#vx", -1000000, &ent->rigidbody->velocity.x, 1000000, 1, 5);
-        //     nk_property_float(ctx, "#vy", -1000000, &ent->rigidbody->velocity.y, 1000000, 1, 5);
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     nk_property_float(ctx, "#rx", -1000000, &ent->rigidbody->rotational_velocity, 1000000, 1, 5);
-        
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     nk_layout_row_dynamic(ctx, 25, 1);
-        //     if(nk_button_label(ctx, "Remove Component")){
-        //         // ye_remove_rigidbody_component(ent);
-        //         editor_unsaved();
-        //         editor_deselect_all();
-        //         nk_tree_pop(ctx);
-        //         return;
-        //     }
-
-        //     nk_tree_pop(ctx);
-        // }
+            nk_tree_pop(ctx);
+        }
     }
     else {
         nk_layout_row_dynamic(ctx, 25, 1);
@@ -661,7 +724,7 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
         nk_layout_row_dynamic(ctx, 25, 1);
         nk_layout_row_dynamic(ctx, 25, 1);
         if(nk_button_label(ctx, "Add Rigidbody Component")){
-            // ye_add_rigidbody_component(ent, 0, 0, 0, 0);
+            ye_add_rigidbody_component(ent, 0, 0, (struct p2d_object){0});
             editor_unsaved();
         }
     }
