@@ -11,6 +11,7 @@
 
 #include <yoyoengine/debug_renderer.h>
 #include <yoyoengine/ecs/ecs.h>
+#include <yoyoengine/ecs/rigidbody.h>
 #include <yoyoengine/utils.h>
 
 #include "editor.h"
@@ -308,11 +309,17 @@ void editor_render_selection_rects(){
             // render cached center point
             ye_debug_render_rect(ent->renderer->_world_center.x - 5, ent->renderer->_world_center.y - 5, 10, 10, pink, 8);
         }
-        // if(ye_component_exists(ent, YE_COMPONENT_COLLIDER)){
-        //     struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_COLLIDER);
-        //     pos = ye_world_prectf_to_screen(pos);
-        //     ye_debug_render_prect(pos, red, 8);
-        // } TODO rigidbody
+        if(ye_component_exists(ent, YE_COMPONENT_RIGIDBODY)){
+            struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_RIGIDBODY);
+            
+            if(ent->rigidbody->p2d_object.type == P2D_OBJECT_RECTANGLE){
+                struct ye_rectf rect = {pos.verticies[0].x, pos.verticies[0].y, pos.verticies[1].x - pos.verticies[0].x, pos.verticies[2].y - pos.verticies[1].y};
+                ye_debug_render_rect(rect.x, rect.y, ent->rigidbody->p2d_object.rectangle.width, ent->rigidbody->p2d_object.rectangle.height, red, 8);
+            }
+            else if(ent->rigidbody->p2d_object.type == P2D_OBJECT_CIRCLE){
+                ye_debug_render_circle(pos.verticies[0].x, pos.verticies[0].y, ent->rigidbody->p2d_object.circle.radius, red, 8);
+            }
+        }
         if(ye_component_exists(ent, YE_COMPONENT_AUDIOSOURCE)){
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_AUDIOSOURCE);
             // pos = ye_world_prectf_to_screen(pos);

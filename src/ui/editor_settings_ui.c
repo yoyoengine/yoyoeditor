@@ -45,6 +45,9 @@ char project_window_title[256];
 char project_icon_path[256];
 bool project_stretch_viewport; // true or false
 bool project_stretch_resolution; // true or false
+float gravity_x;
+float gravity_y;
+int grid_size;
 
 /*
     Build settings variables
@@ -211,6 +214,34 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 nk_tooltip(ctx, "The quality of the pixel scaling. Choose \"nearest\" for pixel art.");
             static const char *pixel_scaling[] = {"nearest", "linear", "anisotropic"};
             nk_combobox(ctx, pixel_scaling, NK_LEN(pixel_scaling), &sdl_quality_hint, 25, nk_vec2(200,200));
+
+            /*
+                Physics Settings
+            */
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_label_colored(ctx, "Physics Settings:", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
+
+            /*
+                Gravity
+            */
+            nk_layout_row_dynamic(ctx, 25, 3);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Gravity Vec:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the direction and magnitude of gravity.");
+            nk_property_float(ctx, "#X:", -1000, &gravity_x, 1000, 0.1f, 0.1f);
+            nk_property_float(ctx, "#Y:", -1000, &gravity_y, 1000, 0.1f, 0.1f);
+
+            /*
+                Grid Size
+            */
+            nk_layout_row_dynamic(ctx, 25, 2);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Physics Cell Size:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the size of broad phase detection cells.");
+            nk_property_int(ctx, "#Size:", 25, &grid_size, 2000, 1, 5);
 
             // lay out our booleans
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -380,6 +411,9 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(SETTINGS, "stretch_viewport", project_stretch_viewport ? json_true() : json_false());
                 json_object_set_new(SETTINGS, "stretch_resolution", project_stretch_resolution ? json_true() : json_false());
                 json_object_set_new(SETTINGS, "sdl_quality_hint", json_integer(sdl_quality_hint));
+                json_object_set_new(SETTINGS, "p2d_gravity_x", json_real(gravity_x));
+                json_object_set_new(SETTINGS, "p2d_gravity_y", json_real(gravity_y));
+                json_object_set_new(SETTINGS, "p2d_grid_size", json_integer(grid_size));
                 // save the settings file
                 ye_json_write(ye_path("settings.yoyo"),SETTINGS);
                 
@@ -601,6 +635,23 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     */
                     if(!ye_json_int(SETTINGS, "sdl_quality_hint", &sdl_quality_hint)){
                         sdl_quality_hint = 1;
+                    }
+
+                    /*
+                        Gravity
+                    */
+                    if(!ye_json_float(SETTINGS, "p2d_gravity_x", &gravity_x)){
+                        gravity_x = 0.0f;
+                    }
+                    if(!ye_json_float(SETTINGS, "p2d_gravity_y", &gravity_y)){
+                        gravity_y = 20.0f;
+                    }
+
+                    /*
+                        Grid Size
+                    */
+                    if(!ye_json_int(SETTINGS, "p2d_grid_size", &grid_size)){
+                        grid_size = 200;
                     }
 
                     /*

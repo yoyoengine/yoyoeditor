@@ -663,21 +663,20 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
             nk_layout_row_dynamic(ctx, 25, 1);
 
             if (nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody Collider", NK_MAXIMIZED)) {
-                static const char *collider_types[] = {"Circle", "Rectangle"};
-                static int selected_collider_type = 0;
+                static const char *collider_types[] = {"Rectangle", "Circle"};
 
                 nk_layout_row_dynamic(ctx, 25, 2);
                 nk_label(ctx, "Collider Type:", NK_TEXT_LEFT);
-                int prev_selected_collider_type = selected_collider_type;
-                selected_collider_type = nk_combo(ctx, collider_types, 2, selected_collider_type, 25, nk_vec2(200,200));
+                int prev_selected_collider_type = ent->rigidbody->p2d_object.type;
+                ent->rigidbody->p2d_object.type = nk_combo(ctx, collider_types, 2, ent->rigidbody->p2d_object.type, 25, nk_vec2(200,200));
 
-                if(selected_collider_type != prev_selected_collider_type){
+                if((int)ent->rigidbody->p2d_object.type != prev_selected_collider_type){
                     // reset the collider to default values
-                    switch(selected_collider_type) {
-                        case 0: // Circle
+                    switch(ent->rigidbody->p2d_object.type) {
+                        case P2D_OBJECT_CIRCLE: // Circle
                             ent->rigidbody->p2d_object.circle.radius = 0;
                             break;
-                        case 1: // Rectangle
+                        case P2D_OBJECT_RECTANGLE: // Rectangle
                             ent->rigidbody->p2d_object.rectangle.width = 0;
                             ent->rigidbody->p2d_object.rectangle.height = 0;
                             break;
@@ -686,14 +685,12 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
                 }
 
                 nk_layout_row_dynamic(ctx, 25, 1);
-                switch(selected_collider_type) {
-                    case 0: // Circle
-                        ent->rigidbody->p2d_object.type = P2D_OBJECT_CIRCLE;
+                switch(ent->rigidbody->p2d_object.type) {
+                    case P2D_OBJECT_CIRCLE: // Circle
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_property_float(ctx, "#radius", 0.0000001, &ent->rigidbody->p2d_object.circle.radius, 1000000, 1, 5);
                         break;
-                    case 1: // Rectangle
-                        ent->rigidbody->p2d_object.type = P2D_OBJECT_RECTANGLE;
+                    case P2D_OBJECT_RECTANGLE: // Rectangle
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_property_float(ctx, "#width", 0.0000001, &ent->rigidbody->p2d_object.rectangle.width, 1000000, 1, 5);
                         nk_property_float(ctx, "#height", 0.0000001, &ent->rigidbody->p2d_object.rectangle.height, 1000000, 1, 5);
