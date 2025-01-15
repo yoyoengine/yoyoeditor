@@ -320,7 +320,7 @@ void ye_editor_paint_editor_settings(struct nk_context *ctx){
         
         nk_layout_row_dynamic(ctx, 25, 2);
         nk_label(ctx, "UI Color Theme:", NK_TEXT_CENTERED);
-        static const char *color_schemes[] = {"black", "dark", "blue", "red", "white", "amoled"};
+        static const char *color_schemes[] = {"black", "dark", "blue", "red", "white", "amoled", "dracula", "catppuccin latte", "catppuccin frappe", "catppuccin macchiato", "catppuccin mocha"};
         nk_combobox(ctx, color_schemes, NK_LEN(color_schemes), &PREFS.color_scheme_index, 25, nk_vec2(200,200));
 
         nk_layout_row_dynamic(ctx, 25, 2);
@@ -362,6 +362,16 @@ void ye_editor_paint_editor_settings(struct nk_context *ctx){
                 set_style(YE_STATE.engine.ctx, THEME_BLUE);
             else if(strcmp(color_schemes[PREFS.color_scheme_index], "amoled") == 0)
                 set_style(YE_STATE.engine.ctx, THEME_AMOLED);
+            else if(strcmp(color_schemes[PREFS.color_scheme_index], "dracula") == 0)
+                set_style(YE_STATE.engine.ctx, THEME_DRACULA);
+            else if(strcmp(color_schemes[PREFS.color_scheme_index], "catppuccin latte") == 0)
+                set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_LATTE);
+            else if(strcmp(color_schemes[PREFS.color_scheme_index], "catppuccin frappe") == 0)
+                set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_FRAPPE);
+            else if(strcmp(color_schemes[PREFS.color_scheme_index], "catppuccin macchiato") == 0)
+                set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_MACCHIATO);
+            else if(strcmp(color_schemes[PREFS.color_scheme_index], "catppuccin mocha") == 0)
+                set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_MOCHA);
             remove_ui_component("editor_settings");
             lock_viewport_interaction = !lock_viewport_interaction;
         }

@@ -463,6 +463,23 @@ int main(int argc, char **argv) {
             set_style(YE_STATE.engine.ctx, THEME_WHITE);
             break;
         case 5:
+            set_style(YE_STATE.engine.ctx, THEME_AMOLED);
+            break;
+        case 6:
+            set_style(YE_STATE.engine.ctx, THEME_DRACULA);
+            break;
+        case 7:
+            set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_LATTE);
+            break;
+        case 8:
+            set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_FRAPPE);
+            break;
+        case 9:
+            set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_MACCHIATO);
+            break;
+        case 10:
+            set_style(YE_STATE.engine.ctx, THEME_CATPPUCCIN_MOCHA);
+            break;
         default:
             set_style(YE_STATE.engine.ctx, THEME_AMOLED);
             break;
