@@ -15,7 +15,7 @@
 #endif
 #include <pwd.h>
 
-#include <Nuklear/nuklear.h>
+#include <yoyoengine/ye_nk.h>
 
 #include <yoyoengine/yoyoengine.h>
 

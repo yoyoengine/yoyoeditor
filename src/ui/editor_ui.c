@@ -18,7 +18,8 @@
 #include "editor_panels.h"
 #include "editor_selection.h"
 #include "editor_utils.h"
-#include <Nuklear/style.h>
+
+#include <yoyoengine/ye_nk.h>
 
 char search_text[256] = {""};
 int matching_results = 0;

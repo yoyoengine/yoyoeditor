@@ -179,7 +179,7 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
 
                 nk_layout_row_static(ctx, 50, 100, 3);
                 for (i = 0; i < 9; ++i) {
-                    if (nk_selectable_label(ctx, "X", NK_TEXT_CENTERED, &alignment_arr[i])) {
+                    if (nk_selectable_label(ctx, "X", NK_TEXT_CENTERED, (nk_bool *)&alignment_arr[i])) {
                         // // zero any other fields that might have been selected
                         // for(int j = 0; j < 9; j++){
                         //     if(j != i){
@@ -638,12 +638,12 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
                 nk_layout_row_dynamic(ctx, 25, 2);
                 
                 // bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Static", (int *)(&ent->rigidbody->p2d_object.is_static));
+                nk_checkbox_label(ctx, "Static", (nk_bool *)(&ent->rigidbody->p2d_object.is_static));
                 // if (nk_input_is_mouse_hovering_rect(in, bounds))
                     // nk_tooltip(ctx, "If checked, the object will not move or be affected by forces");
                 
                 // bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Trigger", (int *)(&ent->rigidbody->p2d_object.is_trigger));
+                nk_checkbox_label(ctx, "Trigger", (nk_bool *)(&ent->rigidbody->p2d_object.is_trigger));
                 // if (nk_input_is_mouse_hovering_rect(in, bounds))
                     // nk_tooltip(ctx, "Will be uncollidable, but emit events when collided with");
 
@@ -835,7 +835,7 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
                             nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->value.string, YE_LUA_SCRIPT_GLOBAL_VALUE_STRING_MAX_CHARACTERS, nk_filter_default);
                             break;
                         case YE_LSG_BOOL:
-                            nk_checkbox_label(ctx, "", (int *)(&current->value.boolean));
+                            nk_checkbox_label(ctx, "", (nk_bool *)(&current->value.boolean));
                             break;
                         default:
                             break;

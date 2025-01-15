@@ -21,10 +21,7 @@
 #include <yoyoengine/yoyoengine.h>
 #include <yoyoengine/logging.h>
 
-#include <Nuklear/nuklear.h>
-#include <Nuklear/style.h>
-#include <Nuklear/nuklear_sdl_renderer.h>
-
+#include <yoyoengine/ye_nk.h>
 
 #include "editor.h"
 #include "editor_ui.h"
