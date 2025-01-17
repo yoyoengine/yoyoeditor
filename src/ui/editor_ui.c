@@ -291,6 +291,8 @@ void ye_editor_paint_options(struct nk_context *ctx){
             if(nk_checkbox_label(ctx, "Physics", (nk_bool*)&dummy_show_physics_overlay)){
                 ye_set_overlay_state("ye_overlay_physics",dummy_show_physics_overlay);
             }
+            // dumb hack: manual sync it in case scene reload messed with it
+            dummy_show_physics_overlay = ye_get_overlay_state("ye_overlay_physics");
 
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_label(ctx, "Visual Debugging:", NK_TEXT_LEFT);
@@ -572,6 +574,9 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 editor_write_scene_to_disk(ye_path_resources(YE_STATE.runtime.scene_file_path));
             }
             if (nk_menu_item_label(ctx, "Exit", NK_TEXT_LEFT)) {
+                // OBLITERATE any overlays
+                ye_set_all_overlays(false);
+
                 EDITOR_STATE.mode = ESTATE_WELCOME;
                 
                 free(EDITOR_STATE.opened_project_path);

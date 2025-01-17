@@ -285,6 +285,18 @@ void editor_editing_loop() {
         ye_load_scene(entry_scene);
     }
 
+    // TODO: this project pref loading should become its own thing
+
+    // get the p2d gravity and cell size
+    float p2d_gravity_x = ye_config_float(SETTINGS, "p2d_gravity_x", 0.0f);
+    float p2d_gravity_y = ye_config_float(SETTINGS, "p2d_gravity_y", 20.0f);
+    int p2d_grid_size = ye_config_int(SETTINGS, "p2d_grid_size", 250);
+
+    // set the gravity
+    YE_STATE.engine.p2d_state->gravity.x = p2d_gravity_x;
+    YE_STATE.engine.p2d_state->gravity.y = p2d_gravity_y;
+    YE_STATE.engine.p2d_state->_cell_size = p2d_grid_size;
+
     entity_list_head = ye_get_entity_list_head();
 
     // TODO: remove in future when we serialize editor prefs
