@@ -79,6 +79,7 @@ if(NOT DEFINED YOYO_ENGINE_PATH)
         GIT_REPOSITORY https://github.com/yoyoengine/yoyoengine.git
         GIT_TAG ${ENGINE_GIT_TAG}
         GIT_PROGRESS TRUE
+        GIT_SHALLOW TRUE
     )
         
     # A little jank... but it works

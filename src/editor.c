@@ -293,9 +293,9 @@ void editor_editing_loop() {
     int p2d_grid_size = ye_config_int(SETTINGS, "p2d_grid_size", 250);
 
     // set the gravity
-    YE_STATE.engine.p2d_state->gravity.x = p2d_gravity_x;
-    YE_STATE.engine.p2d_state->gravity.y = p2d_gravity_y;
-    YE_STATE.engine.p2d_state->_cell_size = p2d_grid_size;
+    YE_STATE.engine.p2d_state->p2d_gravity.x = p2d_gravity_x;
+    YE_STATE.engine.p2d_state->p2d_gravity.y = p2d_gravity_y;
+    YE_STATE.engine.p2d_state->p2d_cell_size = p2d_grid_size;
 
     entity_list_head = ye_get_entity_list_head();
 

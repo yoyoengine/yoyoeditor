@@ -416,9 +416,9 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(SETTINGS, "p2d_grid_size", json_integer(grid_size));
                 
                 // edge: when saving actually update in p2d_state
-                YE_STATE.engine.p2d_state->gravity.x = gravity_x;
-                YE_STATE.engine.p2d_state->gravity.y = gravity_y;
-                YE_STATE.engine.p2d_state->_cell_size = grid_size;
+                YE_STATE.engine.p2d_state->p2d_gravity.x = gravity_x;
+                YE_STATE.engine.p2d_state->p2d_gravity.y = gravity_y;
+                YE_STATE.engine.p2d_state->p2d_cell_size= grid_size;
                 
                 // save the settings file
                 ye_json_write(ye_path("settings.yoyo"),SETTINGS);
