@@ -15,6 +15,8 @@
 #endif
 #include <pwd.h>
 
+#include <curl/curl.h>
+
 #include <yoyoengine/ye_nk.h>
 
 #include <yoyoengine/yoyoengine.h>
@@ -25,50 +27,67 @@
 #include "editor_utils.h"
 #include "editor_project_management.h"
 
-int is_curl_installed() {
-    // TODO: NOTCROSSPLATFORM
-    #ifdef __linux__
-        return system("command -v curl > /dev/null 2>&1") == 0;
-    #else
-        printf("LMAO. ENJOY PORTING THIS.\n");
-        exit(1);
-    #endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to hold the response data
+struct Memory {
+    char *response;
+    size_t size;
+};
+
+// Callback function that accumulates the data
+size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdata) {
+    size_t realsize = size * nmemb;
+    struct Memory *mem = (struct Memory *)userdata;
+    char *tmp = realloc(mem->response, mem->size + realsize + 1);
+    if (!tmp) {
+        ye_logf(error, "Not enough memory to allocate curl response\n");
+        return 0;
+    }
+    mem->response = tmp;
+    memcpy(&(mem->response[mem->size]), ptr, realsize);
+    mem->size += realsize;
+    mem->response[mem->size] = '\0'; // Null-terminate the string
+    return realsize;
 }
 
 char *run_curl_command(const char *url) {
-    FILE *fp;
-    char path[1035];
-    char *json_data = NULL;
-    size_t json_data_size = 0;
+    CURL *curl;
+    CURLcode res;
+    char *data = NULL;
 
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "curl -s \"%s\"", url);
-
-    fp = popen(cmd, "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to run curl command\n");
+    // Initialize memory struct
+    struct Memory chunk;
+    chunk.response = malloc(1);  // will be grown by realloc in write_callback
+    chunk.size = 0;
+    if (!chunk.response) {
+        ye_logf(error, "Failed to allocate initial memory\n");
         return NULL;
     }
 
-    while (fgets(path, sizeof(path), fp) != NULL) {
-        size_t len = strlen(path);
-        char *new_data = realloc(json_data, json_data_size + len + 1);
-        if (new_data == NULL) {
-            fprintf(stderr, "Not enough memory\n");
-            free(json_data);
-            pclose(fp);
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "yoyoengine");    // github requires a user agent: lets rep the yoyoengine!
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK) {
+            ye_logf(error, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            free(chunk.response);
+            curl_easy_cleanup(curl);
             return NULL;
         }
-        json_data = new_data;
-        memcpy(json_data + json_data_size, path, len);
-        json_data_size += len;
-    }
-    if (json_data) {
-        json_data[json_data_size] = '\0';
+
+        curl_easy_cleanup(curl);
     }
 
-    pclose(fp);
-    return json_data;
+    data = chunk.response;
+    return data;
 }
 
 char *check_remote_version() {
@@ -170,7 +189,8 @@ void load_project_cache() {
 void editor_init_panel_welcome() {
     snprintf(welcome_text, sizeof(welcome_text), "You are currently running yoyoeditor %s, powered by yoyoengine core %s.", YOYO_EDITOR_VERSION_STRING, YOYO_ENGINE_VERSION_STRING);
 
-    curl_installed = is_curl_installed();
+    // curl_installed = is_curl_installed();
+    curl_installed = true;
 
     if(!curl_installed){
         ye_logf(info, "CURL IS NOT INSTALLED!\n");

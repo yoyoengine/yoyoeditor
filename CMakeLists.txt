@@ -108,6 +108,26 @@ endif()
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+###############
+#   libcurl   #
+###############
+
+set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
+set(CURL_STATICLIB ON CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    curl
+    GIT_REPOSITORY https://github.com/curl/curl.git
+    GIT_TAG curl-8_11_1
+    GIT_PROGRESS TRUE
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(curl)
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE CURL::libcurl)
+if(WIN32)
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE CURL_STATICLIB)
+endif()
+
 # Set the output directory for the executable
 set_target_properties(${EXECUTABLE_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${EDITOR_BUILD_DIR}"
