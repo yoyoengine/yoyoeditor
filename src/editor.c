@@ -166,11 +166,9 @@ void editor_pre_handle_input(SDL_Event event){
     if (event.type == SDL_EVENT_QUIT)
         quit = true;
 
-    if(event.type == SDL_WINDOWEVENT) {
-        if(event.window.event == SDL_EVENT_WINDOW_RESIZED) {
-            screenWidth = event.window.data1;
-            screenHeight = event.window.data2;
-        }
+    if(event.type & SDL_EVENT_WINDOW_RESIZED) {
+        screenWidth = event.window.data1;
+        screenHeight = event.window.data2;
     }
 }
 
@@ -399,7 +397,7 @@ int main(int argc, char **argv) {
     /*
         Set the editor settings path
     */
-    editor_base_path = SDL_GetBasePath();
+    editor_base_path = strdup(SDL_GetBasePath());
     snprintf(editor_settings_path, sizeof(editor_settings_path), "%s./editor.yoyo", editor_base_path);
 
     yoyo_loading_refresh("Reading editor settings...");
@@ -410,7 +408,7 @@ int main(int argc, char **argv) {
         SDL_Surface *tmp_sur = IMG_Load(editor_resources_path(PATH));                   \
         TEXTURE_VAR = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, tmp_sur); \
         ICON_FIELD = nk_image_ptr(TEXTURE_VAR);                                         \
-        SDL_FreeSurface(tmp_sur);                                                       \
+        SDL_DestroySurface(tmp_sur);                                                       \
     } while(0)
 
     INIT_EDITOR_TEXTURE("edicons/edicon_style.png", style_tex, editor_icons.style);

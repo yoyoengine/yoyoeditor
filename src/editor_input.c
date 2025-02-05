@@ -161,15 +161,13 @@ void editor_input_misc(SDL_Event event){
     }
 
     // window events //
-    if(event.type == SDL_WINDOWEVENT){
-        if(event.window.event == SDL_EVENT_WINDOW_RESIZED){
-            screenWidth = event.window.data1;
-            screenHeight = event.window.data2;
+    if(event.type & SDL_EVENT_WINDOW_RESIZED) {
+        screenWidth = event.window.data1;
+        screenHeight = event.window.data2;
 
-            // if we have resized and we are in the editor, we need to update the editor camera
-            editor_camera->camera->view_field.w = screenWidth / camera_zoom;
-            editor_camera->camera->view_field.h = screenHeight / camera_zoom;
-        }
+        // if we have resized and we are in the editor, we need to update the editor camera
+        editor_camera->camera->view_field.w = screenWidth / camera_zoom;
+        editor_camera->camera->view_field.h = screenHeight / camera_zoom;
     }
 }
 

@@ -115,10 +115,8 @@ void select_within(SDL_Rect zone){
 
 void editor_selection_handler(SDL_Event event){
     // check if mouse left window
-    if(event.type == SDL_WINDOWEVENT){
-        if (event.window.event == SDL_EVENT_WINDOW_MOUSE_LEAVE) {
-            is_dragging = false; editor_draw_drag_rect = false;
-        }
+    if(event.type & SDL_EVENT_WINDOW_MOUSE_LEAVE){
+        is_dragging = false; editor_draw_drag_rect = false;
     }
 
     // if we arent hovering editor ignore
@@ -138,7 +136,7 @@ void editor_selection_handler(SDL_Event event){
     my = ((my / scaleY) + campos.y);
 
     if(is_dragging)
-        editor_draw_drag_rect = !(abs(mx - drag_start.x) < PREFS.min_select_px && abs(my - drag_start.y) < PREFS.min_select_px);
+        editor_draw_drag_rect = !(fabs(mx - drag_start.x) < PREFS.min_select_px && fabs(my - drag_start.y) < PREFS.min_select_px);
     
 
     switch (event.type) {

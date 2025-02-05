@@ -403,7 +403,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(SETTINGS, "screen_width", project_screen_size_UNPROCESSED == 0 ? json_integer(1920) : json_integer(2560));
                 json_object_set_new(SETTINGS, "screen_height", project_screen_size_UNPROCESSED == 0 ? json_integer(1080) : json_integer(1440));
                 if (project_window_mode_UNPROCESSED == 2) {
-                    json_object_set_new(SETTINGS, "window_mode", json_integer(SDL_WINDOW_FULLSCREEN_DESKTOP));
+                    json_object_set_new(SETTINGS, "window_mode", json_integer(SDL_WINDOW_FULLSCREEN));
                 } else {
                     json_object_set_new(SETTINGS, "window_mode", project_window_mode_UNPROCESSED == 0 ? json_integer(0) : json_integer(1));
                 }
@@ -606,7 +606,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     if(!ye_json_int(SETTINGS, "window_mode", &project_window_mode_UNPROCESSED)){
                         project_window_mode_UNPROCESSED = 0;
                     }else{
-                        if(project_window_mode_UNPROCESSED == SDL_WINDOW_FULLSCREEN_DESKTOP){
+                        if(project_window_mode_UNPROCESSED == SDL_WINDOW_FULLSCREEN){
                             project_window_mode_UNPROCESSED = 2;
                         }
                     }
