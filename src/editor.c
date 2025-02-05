@@ -132,8 +132,8 @@ void yoyo_loading_refresh(char * status)
     SDL_SetRenderDrawColor(YE_STATE.runtime.renderer, 0, 0, 0, 255);
     SDL_RenderClear(YE_STATE.runtime.renderer);
 
-    SDL_RenderSetViewport(YE_STATE.runtime.renderer, NULL);
-    SDL_RenderSetScale(YE_STATE.runtime.renderer, 1.0f, 1.0f);
+    SDL_SetRenderViewport(YE_STATE.runtime.renderer, NULL);
+    SDL_SetRenderScale(YE_STATE.runtime.renderer, 1.0f, 1.0f);
 
     // paint just the loading
     editor_panel_loading(YE_STATE.engine.ctx);
@@ -163,11 +163,11 @@ SDL_Texture * refresh_tex           = NULL;
 SDL_Texture * lightheader           = NULL;
 
 void editor_pre_handle_input(SDL_Event event){
-    if (event.type == SDL_QUIT)
+    if (event.type == SDL_EVENT_QUIT)
         quit = true;
 
     if(event.type == SDL_WINDOWEVENT) {
-        if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
+        if(event.window.event == SDL_EVENT_WINDOW_RESIZED) {
             screenWidth = event.window.data1;
             screenHeight = event.window.data2;
         }
@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
         Do some custom sdl setup for the editor specifically
     */
     // allow window resizing
-    SDL_SetWindowResizable(YE_STATE.runtime.window, SDL_TRUE); // maybe expose this in the json later on
+    SDL_SetWindowResizable(YE_STATE.runtime.window, true); // maybe expose this in the json later on
     SDL_SetWindowMinimumSize(YE_STATE.runtime.window, 1280, 720); // also maybe expose this as an option.
     /*
         The thing about exposing these in json is that any competant dev (not that I am one) or anyone else (nobody will use this engine but me)

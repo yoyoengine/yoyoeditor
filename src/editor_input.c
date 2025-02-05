@@ -42,7 +42,7 @@ float mx, my;
 
 void update_mx_my(){
     // get the current mouse position in window
-    int _mx, _my; SDL_GetMouseState(&_mx, &_my);
+    float _mx, _my; SDL_GetMouseState(&_mx, &_my);
     mx = _mx;
     my = _my;
 
@@ -59,15 +59,15 @@ void editor_input_panning(SDL_Event event){
     // get mouse world pos
     update_mx_my();
 
-    int win_mx, win_my; SDL_GetMouseState(&win_mx, &win_my);
+    float win_mx, win_my; SDL_GetMouseState(&win_mx, &win_my);
 
     // if middle mouse clicked down, initialize panning
-    if (event.type == SDL_MOUSEBUTTONDOWN) {
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
         if (event.button.button == SDL_BUTTON_MIDDLE) {
             if (!lock_viewport_interaction) {
                 editor_panning = true;
                 
-                SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL));
+                SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_MOVE));
 
                 // set the starting point for our pan on first frame
                 last_pan_x = mx;
@@ -76,14 +76,14 @@ void editor_input_panning(SDL_Event event){
         }
     }
     // if middle mouse released, stop panning
-    else if (event.type == SDL_MOUSEBUTTONUP) {
+    else if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
         if (event.button.button == SDL_BUTTON_MIDDLE) {
             editor_panning = false;
-            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW));
+            SDL_SetCursor(SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT));
         }
     }
     // mouse movement, if we are panning move the camera
-    else if (event.type == SDL_MOUSEMOTION) {
+    else if (event.type == SDL_EVENT_MOUSE_MOTION) {
         if (editor_panning) {
             // get the diff we need to pan by
             float dx = mx - last_pan_x;
@@ -100,7 +100,7 @@ void editor_input_panning(SDL_Event event){
             last_pan_y = my;
         }
     }
-    else if (event.type == SDL_MOUSEWHEEL && is_hovering_editor(win_mx, win_my) && !lock_viewport_interaction)
+    else if (event.type == SDL_EVENT_MOUSE_WHEEL && is_hovering_editor(win_mx, win_my) && !lock_viewport_interaction)
     {
         float dt = ye_delta_time();
         float zoom_factor = 0.1f; // Adjust this value to control the zoom speed
@@ -156,13 +156,13 @@ void editor_input_panning(SDL_Event event){
 */
 void editor_input_misc(SDL_Event event){
     // update the mouse world position
-    if(event.type == SDL_MOUSEMOTION){
+    if(event.type == SDL_EVENT_MOUSE_MOTION){
         editor_update_mouse_world_pos(event.motion.x, event.motion.y);
     }
 
     // window events //
     if(event.type == SDL_WINDOWEVENT){
-        if(event.window.event == SDL_WINDOWEVENT_RESIZED){
+        if(event.window.event == SDL_EVENT_WINDOW_RESIZED){
             screenWidth = event.window.data1;
             screenHeight = event.window.data2;
 
@@ -177,21 +177,21 @@ void editor_input_misc(SDL_Event event){
     Any keyboard shortcuts for the editor
 */
 void editor_input_shortcuts(SDL_Event event){
-    if (event.type == SDL_KEYDOWN)
+    if (event.type == SDL_EVENT_KEY_DOWN)
     {
-        switch (event.key.keysym.sym)
+        switch (event.key.key)
         {
-        case SDLK_s:
+        case SDLK_S :
             // CTRL + S ->= save the scene
-            if (event.key.keysym.mod & KMOD_CTRL)
+            if (event.key.mod & SDL_KMOD_CTRL)
             {
                 editor_write_scene_to_disk(ye_path_resources(YE_STATE.runtime.scene_file_path));
                 editor_saved();
             }
             break;
-        case SDLK_r:
+        case SDLK_R :
             // CTRL + SHIFT + R ->= reload the current scene
-            if (event.key.keysym.mod & KMOD_CTRL && event.key.keysym.mod & KMOD_SHIFT)
+            if (event.key.mod & SDL_KMOD_CTRL && event.key.mod & SDL_KMOD_SHIFT)
             {
                 ye_logf(debug,"Editor Reloading Scene.\n");
                 editor_deselect_all();
@@ -200,12 +200,12 @@ void editor_input_shortcuts(SDL_Event event){
                 editor_saved();
             }
             // CTRL + R ->= build and run the project
-            else if (event.key.keysym.mod & KMOD_CTRL)
+            else if (event.key.mod & SDL_KMOD_CTRL)
             {
                 editor_build_and_run();
             }
             break;
-        case SDLK_BACKQUOTE:
+        case SDLK_GRAVE :
             // if we opened or closed the console, lock accordingly
             lock_viewport_interaction = ui_component_exists("console");
             break;
@@ -222,7 +222,7 @@ void editor_input_shortcuts(SDL_Event event){
     - zoom in should center on the mouse or the center of the screen
 */
 void editor_handle_input(SDL_Event event) {
-    if (event.type == SDL_QUIT)
+    if (event.type == SDL_EVENT_QUIT)
         quit = true;
 
     // misc input handling
