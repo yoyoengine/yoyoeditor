@@ -137,7 +137,7 @@ void yoyo_loading_refresh(char * status)
 
     // paint just the loading
     editor_panel_loading(YE_STATE.engine.ctx);
-    nk_sdl_render(NK_ANTI_ALIASING_ON);
+    nk_sdl_render(YE_STATE.engine.ctx, NK_ANTI_ALIASING_ON);
 
     SDL_RenderPresent(YE_STATE.runtime.renderer);
 
