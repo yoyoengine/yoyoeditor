@@ -166,7 +166,7 @@ void editor_pre_handle_input(SDL_Event event){
     if (event.type == SDL_EVENT_QUIT)
         quit = true;
 
-    if(event.type & SDL_EVENT_WINDOW_RESIZED) {
+    if(event.type == SDL_EVENT_WINDOW_RESIZED) {
         screenWidth = event.window.data1;
         screenHeight = event.window.data2;
     }

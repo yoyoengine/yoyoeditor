@@ -797,7 +797,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
             }
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label_colored(ctx, "Copyright (c) Ryan Zmuda 2023-2024", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
+            nk_label_colored(ctx, "Copyright (c) Ryan Zmuda 2023-2025", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
         nk_end(ctx);
     }
 }

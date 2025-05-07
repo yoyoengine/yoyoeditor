@@ -161,7 +161,7 @@ void editor_input_misc(SDL_Event event){
     }
 
     // window events //
-    if(event.type & SDL_EVENT_WINDOW_RESIZED) {
+    if(event.type == SDL_EVENT_WINDOW_RESIZED) {
         screenWidth = event.window.data1;
         screenHeight = event.window.data2;
 

@@ -34,7 +34,7 @@ void editor_panel_credits(struct nk_context *ctx){
         
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_layout_row_dynamic(ctx, 20, 1);
-        nk_label(ctx, "Ryan Zmuda, 2023-2024", NK_TEXT_CENTERED);
+        nk_label(ctx, "Ryan Zmuda, 2023-2025", NK_TEXT_CENTERED);
 
         nk_layout_row_dynamic(ctx, 20, 1);
         nk_layout_row_dynamic(ctx, 20, 1);
