@@ -433,6 +433,88 @@ void group_welcome(struct nk_context *ctx) {
     }
 }
 
+static void SDLCALL editor_browse_new_project_cb(void* userdata, const char* const* filelist, int filter){
+    if(!filelist) {
+        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
+        return;
+    }
+    else if (!*filelist) {
+        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
+        return;
+    }
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
+    strncpy(new_proj_path, *filelist, (size_t)sizeof(new_proj_path) - 1);
+    // do not free filelist
+    
+    (void)userdata; // unused
+    (void)filter; // unused
+}
+
+static void SDLCALL editor_browse_existing_project_cb(void* userdata, const char* const* filelist, int filter){
+    if(!filelist) {
+        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
+        return;
+    }
+    else if (!*filelist) {
+        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
+        return;
+    }
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
+    strncpy(new_proj_path, *filelist, (size_t)sizeof(new_proj_path) - 1);
+    // do not free filelist
+
+    // check if path/settings.yoyo exists, if so read it into json_t
+    char settings_path[1024];
+    snprintf(settings_path, sizeof(settings_path), "%s/settings.yoyo", *filelist);
+    if(access(settings_path, F_OK) == -1){
+        ye_logf(error, "%s was not a real yoyoengine project.\n", *filelist);
+        return;
+    }
+
+    json_t *settings = ye_json_read(settings_path);
+
+    if(!settings){
+        ye_logf(error, "Failed to read %s\n", settings_path);
+        return;
+    }
+
+    /*
+        Check editor runtime version
+    */
+    const char *version = json_string_value(json_object_get(settings, "engine_version"));
+
+    int major, minor;
+    ye_get_version(version, &major, &minor);
+    
+    // we dont gaurantee backwards compatibility, but minor versions should be ok
+    if(YOYO_ENGINE_MAJOR_VERSION != major) {
+        // just warn if major versions are different
+        ye_logf(warning, "Project version %s does not match editor version %s. Proceeding anyways...\n", version, YOYO_ENGINE_VERSION_STRING);
+    }
+
+    const char * name = json_string_value(json_object_get(settings, "name"));
+
+    char stamp[11]; get_stamp_string(stamp, sizeof(stamp));
+
+    // set key in project cache
+    json_t *project = json_object();
+    json_object_set_new(project, "name", json_string(name));
+    json_object_set_new(project, "date", json_string(stamp));
+    json_object_set_new(project, "path", json_string(*filelist));
+
+    json_t *projects = json_object_get(project_cache, "projects");
+    
+    // append at start of array
+    json_array_insert_new(projects, 0, project);
+
+    serialize_projects();
+    
+    (void)userdata; // unused
+    (void)filter; // unused
+}
+
 void create_project_popup(struct nk_context *ctx) {
     struct nk_vec2 panelsize = nk_window_get_content_region_size(ctx);
     int w = 400;
@@ -455,11 +537,7 @@ void create_project_popup(struct nk_context *ctx) {
         nk_layout_row_push(ctx, 0.28 + 0.05);
 
         if(nk_button_image_label(ctx, editor_icons.folder, "browse", NK_TEXT_CENTERED)){
-            char *path = editor_file_dialog_select_folder();
-            if(path){
-                snprintf(new_proj_path, sizeof(new_proj_path), "%s", path);
-                free(path);
-            }
+            SDL_ShowOpenFolderDialog(editor_browse_new_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
         }
 
         nk_layout_row_dynamic(ctx, 20, 1);
@@ -522,61 +600,8 @@ void group_projects(struct nk_context *ctx) {
         if(nk_button_image_label(ctx, editor_icons.folder, "Open", NK_TEXT_CENTERED)){
             ye_logf(info, "Open Existing Project\n");
 
-            char *path = editor_file_dialog_select_folder();
-
-            if(path){
-                // check if path/settings.yoyo exists, if so read it into json_t
-                char settings_path[1024];
-                snprintf(settings_path, sizeof(settings_path), "%s/settings.yoyo", path);
-                if(access(settings_path, F_OK) == -1){
-                    ye_logf(error, "%s was not a real yoyoengine project.\n", path);
-                    free(path);
-                    nk_group_end(ctx);
-                    return;
-                }
-
-                json_t *settings = ye_json_read(settings_path);
-
-                if(!settings){
-                    ye_logf(error, "Failed to read %s\n", settings_path);
-                    free(path);
-                    nk_group_end(ctx);
-                    return;
-                }
-
-                /*
-                    Check editor runtime version
-                */
-                const char *version = json_string_value(json_object_get(settings, "engine_version"));
-
-                int major, minor;
-                ye_get_version(version, &major, &minor);
-                
-                // we dont gaurantee backwards compatibility, but minor versions should be ok
-                if(YOYO_ENGINE_MAJOR_VERSION != major) {
-                    // just warn if major versions are different
-                    ye_logf(warning, "Project version %s does not match editor version %s. Proceeding anyways...\n", version, YOYO_ENGINE_VERSION_STRING);
-                }
-
-                const char * name = json_string_value(json_object_get(settings, "name"));
-
-                char stamp[11]; get_stamp_string(stamp, sizeof(stamp));
-
-                // set key in project cache
-                json_t *project = json_object();
-                json_object_set_new(project, "name", json_string(name));
-                json_object_set_new(project, "date", json_string(stamp));
-                json_object_set_new(project, "path", json_string(path));
-
-                json_t *projects = json_object_get(project_cache, "projects");
-                
-                // append at start of array
-                json_array_insert_new(projects, 0, project);
-
-                serialize_projects();
-
-                free(path);
-            }
+            // open file dialog
+            SDL_ShowOpenFolderDialog(editor_browse_existing_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
         }
 
         rolling_height += 50;

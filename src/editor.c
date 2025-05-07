@@ -519,6 +519,8 @@ int main(int argc, char **argv) {
             path[strlen(path) - 1] = '\0';
 
         EDITOR_STATE.opened_project_path = strdup(path); // TODO: free me :-0
+        EDITOR_STATE.opened_project_resources_path = malloc(strlen(path) + strlen("resources/") + 1);
+        snprintf(EDITOR_STATE.opened_project_resources_path, strlen(path) + strlen("resources/") + 1, "%s/resources/", path);
         EDITOR_STATE.mode = ESTATE_EDITING;
     }
 

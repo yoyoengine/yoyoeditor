@@ -71,6 +71,24 @@ void editor_reload_build_file(){
     BUILD_FILE = ye_json_read(ye_path("build.yoyo"));
 }
 
+static void SDLCALL editor_engine_selector_dialog_cb(void* userdata, const char* const* filelist, int filter){
+    if(!filelist) {
+        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
+        return;
+    }
+    else if (!*filelist) {
+        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
+        return;
+    }
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
+    strncpy(local_engine_path, *filelist, (size_t)sizeof(local_engine_path) - 1);
+    // do not free filelist
+    
+    (void)userdata; // unused
+    (void)filter; // unused
+}
+
 void ye_editor_paint_project_settings(struct nk_context *ctx){
     if (nk_begin(ctx, "Settings", nk_rect(screenWidth/2 - 250, screenHeight/2 - 250, 500, 500),
         NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)) {
@@ -360,11 +378,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 nk_layout_row_push(ctx, 0.05f);
                 nk_layout_row_push(ctx, 0.06f);
                 if(nk_button_image(ctx, editor_icons.folder)){
-                    char *new_path = editor_file_dialog_select_folder();
-                    if(new_path != NULL){
-                        strncpy(local_engine_path, new_path, (size_t)sizeof(local_engine_path) - 1);
-                        free(new_path);
-                    }
+                    SDL_ShowOpenFolderDialog(editor_engine_selector_dialog_cb, NULL, YE_STATE.runtime.window, NULL, false);
                 }
             }
             else {

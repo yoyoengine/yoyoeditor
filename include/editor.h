@@ -67,6 +67,7 @@ struct editor_state {
     } mode;
 
     char * opened_project_path;
+    char * opened_project_resources_path;
 
     // build system //
 

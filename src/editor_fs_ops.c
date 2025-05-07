@@ -212,7 +212,3 @@ char *editor_file_dialog_select_resource(const char *filter) {
         return NULL;
     }
 }
-
-char *editor_file_dialog_select_folder() {
-    return editor_file_dialog(NULL, NULL, "Selected folder", FOLDER_DIALOG);
-}
