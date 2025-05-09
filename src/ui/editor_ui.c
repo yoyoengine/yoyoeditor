@@ -581,6 +581,8 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 
                 free(EDITOR_STATE.opened_project_path);
                 EDITOR_STATE.opened_project_path = NULL;
+                free(EDITOR_STATE.opened_project_resources_path);
+                EDITOR_STATE.opened_project_resources_path = NULL;
             }
             nk_menu_end(ctx);
 

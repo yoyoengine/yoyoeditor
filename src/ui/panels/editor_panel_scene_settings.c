@@ -10,6 +10,8 @@
 #include "editor.h"
 #include "editor_panels.h"
 #include "editor_fs_ops.h"
+#include "editor_defs.h"
+#include "editor_file_picker.h"
 
 // TODO: move me to utils for editor and use everywhere
 struct nk_rect editor_panel_bounds_centered(int w, int h){
@@ -137,11 +139,18 @@ void editor_panel_scene_settings(struct nk_context *ctx){
         nk_layout_row_push(ctx, 0.05f);
         nk_layout_row_push(ctx, 0.28f);
         if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-            char *new_path = editor_file_dialog_select_resource("*.mp3 *.wav");
-            if(new_path != NULL){
-                strncpy(scene_music_path, new_path, (size_t)sizeof(scene_music_path) - 1);
-                free(new_path);
-            }
+            editor_pick_resource_file(
+                (struct editor_picker_data){
+                    .filter = editor_audio_filters,
+                    .num_filters = &editor_num_audio_filters,
+
+                    .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                    .dest.output_buf = {
+                        .buffer = scene_music_path,
+                        .size = sizeof(scene_music_path) - 1,
+                    },
+                }
+            );
         }
         
         nk_layout_row_dynamic(ctx, 30, 2);

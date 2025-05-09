@@ -16,4 +16,19 @@ extern int editor_num_image_filters;
 extern SDL_DialogFileFilter editor_audio_filters[];
 extern int editor_num_audio_filters;
 
+extern SDL_DialogFileFilter editor_script_filters[];
+extern int editor_num_script_filters; 
+
+extern SDL_DialogFileFilter editor_yoyo_filters[];
+extern int editor_num_yoyo_filters; 
+
+extern SDL_DialogFileFilter editor_font_filters[];
+extern int editor_num_font_filters; 
+
+extern SDL_DialogFileFilter editor_icon_filters[];
+extern int editor_num_icon_filters; 
+
+extern SDL_DialogFileFilter editor_any_filters[];
+extern int editor_num_any_filters;
+
 #endif

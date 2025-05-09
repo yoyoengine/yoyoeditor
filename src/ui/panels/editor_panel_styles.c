@@ -19,6 +19,8 @@
 #include "editor_panels.h"
 #include "editor_utils.h"
 #include "editor_fs_ops.h"
+#include "editor_defs.h"
+#include "editor_file_picker.h"
 
 json_t * style_data = NULL;
 
@@ -295,11 +297,19 @@ void editor_panel_styles(struct nk_context *ctx)
 
                 nk_layout_row_push(ctx, 0.15f);
                 if(nk_button_image_label(ctx, editor_icons.folder, "browse", NK_TEXT_CENTERED)){
-                    char *new_path = editor_file_dialog_select_resource("*.ttf");
-                    if(new_path != NULL){
-                        strncpy(current_font->font.path, new_path, sizeof(current_font->font.path));
-                        free(new_path);
-                    }
+                    editor_pick_resource_file(
+                        (struct editor_picker_data){
+                            .filter = editor_font_filters,
+                            .num_filters = &editor_num_font_filters,
+                            .default_location = current_font->font.path,
+
+                            .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                            .dest.output_buf = {
+                                .buffer = current_font->font.path,
+                                .size = sizeof(current_font->font.path),
+                            },
+                        }
+                    );
                 }
 
                 nk_layout_row_push(ctx, 0.2f);                

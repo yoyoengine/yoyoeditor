@@ -26,6 +26,7 @@
 #include "editor_fs_ops.h"
 #include "editor_utils.h"
 #include "editor_project_management.h"
+#include "editor_file_picker.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -433,37 +434,12 @@ void group_welcome(struct nk_context *ctx) {
     }
 }
 
-static void SDLCALL editor_browse_new_project_cb(void* userdata, const char* const* filelist, int filter){
-    if(!filelist) {
-        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
-        return;
-    }
-    else if (!*filelist) {
-        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
-        return;
-    }
-
-    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
-    strncpy(new_proj_path, *filelist, (size_t)sizeof(new_proj_path) - 1);
-    // do not free filelist
-    
-    (void)userdata; // unused
-    (void)filter; // unused
-}
-
+/*
+    SDLCALL-in-SDLCALL. Propogates from our file browser wrapper real call
+*/
 static void SDLCALL editor_browse_existing_project_cb(void* userdata, const char* const* filelist, int filter){
-    if(!filelist) {
-        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
-        return;
-    }
-    else if (!*filelist) {
-        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
-        return;
-    }
-
     ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
     strncpy(new_proj_path, *filelist, (size_t)sizeof(new_proj_path) - 1);
-    // do not free filelist
 
     // check if path/settings.yoyo exists, if so read it into json_t
     char settings_path[1024];
@@ -537,7 +513,20 @@ void create_project_popup(struct nk_context *ctx) {
         nk_layout_row_push(ctx, 0.28 + 0.05);
 
         if(nk_button_image_label(ctx, editor_icons.folder, "browse", NK_TEXT_CENTERED)){
-            SDL_ShowOpenFolderDialog(editor_browse_new_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
+            // SDL_ShowOpenFolderDialog(editor_browse_new_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
+            editor_pick_folder(
+                (struct editor_picker_data){
+                    .filter = NULL,
+                    .num_filters = NULL,
+                    .default_location = NULL,
+
+                    .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                    .dest.output_buf = {
+                        .buffer = new_proj_path,
+                        .size = sizeof(new_proj_path) - 1,
+                    },
+                }
+            );
         }
 
         nk_layout_row_dynamic(ctx, 20, 1);
@@ -601,7 +590,16 @@ void group_projects(struct nk_context *ctx) {
             ye_logf(info, "Open Existing Project\n");
 
             // open file dialog
-            SDL_ShowOpenFolderDialog(editor_browse_existing_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
+            editor_pick_folder(
+                (struct editor_picker_data){
+                    .filter = NULL,
+                    .num_filters = NULL,
+                    .default_location = NULL,
+
+                    .response_mode = EDITOR_PICKER_FWD_CB,
+                    .dest.callback = editor_browse_existing_project_cb
+                }
+            );
         }
 
         rolling_height += 50;
@@ -700,6 +698,8 @@ void group_projects(struct nk_context *ctx) {
                     free(EDITOR_STATE.opened_project_path);
                 }
                 EDITOR_STATE.opened_project_path = strdup(path_str);
+                EDITOR_STATE.opened_project_resources_path = malloc(strlen(path_str) + strlen("resources/") + 1);
+                snprintf(EDITOR_STATE.opened_project_resources_path, strlen(path_str) + strlen("resources/") + 1, "%s/resources/", path_str);
 
                 nk_group_end(ctx);
                 nk_style_pop_color(ctx);
