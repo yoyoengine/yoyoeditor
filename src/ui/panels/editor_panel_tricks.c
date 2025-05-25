@@ -16,6 +16,7 @@
 
 #include "editor.h"
 #include "editor_utils.h"
+#include "editor_fs_ops.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -90,7 +91,7 @@ void _load_tricks_meta(char *path, char *parent_folder){
 
 void _re_cache_tricks_meta(){
     // remove the tricks.yoyo file
-    remove(ye_path("tricks/tricks_editor_cache.yoyo"));
+    editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
     ye_logf(debug, "Removed cached tricks_editor_cache.yoyo file\n");
 
     // cache for later
@@ -179,7 +180,7 @@ void editor_panel_tricks(struct nk_context *ctx){
                     json_decref(tricks_meta);
                     tricks_meta = NULL;
 
-                    remove(ye_path("tricks/tricks_editor_cache.yoyo"));
+                    editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
 
                     load_tricks_meta(ye_path("tricks/tricks_editor_cache.yoyo"));
                     _re_cache_tricks_meta();
@@ -204,7 +205,7 @@ void editor_panel_tricks(struct nk_context *ctx){
             tricks_meta = NULL;
 
             // remove the tricks.yoyo file
-            remove(ye_path("tricks/tricks_editor_cache.yoyo"));
+            editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
             ye_logf(debug, "Removed cached tricks_editor_cache.yoyo file\n");
         }
         if(nk_button_label(ctx, "open tricks folder")){
@@ -263,20 +264,14 @@ void editor_panel_tricks(struct nk_context *ctx){
                 const char * f; ye_json_string(trick, "folder", &f);
 
                 // delete it
-                char command[512];
-                snprintf(command, sizeof(command), "rm -rf \"%s\"%s", ye_path("tricks/"),f); // NOTCROSSPLATFORM
-                
-                // Execute the command.
-                int res = system(command);
-
-                if(res != 0){
-                    ye_logf(error, "Failed to delete trick folder.\n");
-                }
+                char path[512];
+                snprintf(path, sizeof(path), "%s/%s", ye_path("tricks/"),f);
+                editor_recurse_delete_directory(path);
 
                 json_decref(tricks_meta);
                 tricks_meta = NULL;
 
-                remove(ye_path("tricks/tricks_editor_cache.yoyo"));
+                editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
 
                 load_tricks_meta(ye_path("tricks/tricks_editor_cache.yoyo"));
                 _re_cache_tricks_meta();

@@ -44,7 +44,7 @@ bool editor_rename_path(const char *src, const char *dst);
  * @param path The path to the file or directory to delete
  * @return true on success, false on failure
  */
-bool editor_delete_path(const char *path);
+bool editor_delete_file(const char *path);
 
 /**
  * @brief Copy a file or directory.
@@ -81,5 +81,21 @@ void editor_touch_file(const char *file_path, const char *content);
  * @return int 0 on success, -1 on error
  */
 int editor_set_fs_times(const char *path, time_t access_time, time_t modification_time);
+
+/**
+ * @brief Change the current working directory to the specified path.
+ * 
+ * @param path The path to change to
+ * @return true on success, false on failure
+ */
+bool editor_chdir(const char *path);
+
+/**
+ * @brief Recursively delete a directory and its contents.
+ * 
+ * @param path The path to the directory to delete
+ * @return true on success, false on failure
+ */
+bool editor_recurse_delete_directory(const char *path);
 
 #endif

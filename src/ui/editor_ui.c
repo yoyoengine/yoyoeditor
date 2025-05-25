@@ -20,6 +20,7 @@
 #include "editor_utils.h"
 #include "editor_file_picker.h"
 #include "editor_defs.h"
+#include "editor_fs_ops.h"
 
 #include <yoyoengine/ye_nk.h>
 
@@ -508,7 +509,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     lock_viewport_interaction = !lock_viewport_interaction;
                 }
                 if(nk_button_label(ctx, "Yes")){
-                    if(remove(YE_STATE.runtime.scene_file_path) == 0){
+                    if(editor_delete_file(YE_STATE.runtime.scene_file_path)){
                         ye_logf(info, "Deleted scene %s\n", YE_STATE.runtime.scene_file_path);
                     }
                     else{

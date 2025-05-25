@@ -309,32 +309,20 @@ void editor_editing_loop() {
     // core editing loop
     while(EDITOR_STATE.mode == ESTATE_EDITING && !quit) {
 
-        // if we are building, check if the build thread has finished to avoid zombie processes
-        // NOTCROSSPLATFORM
+        // if we are building, check if the build thread has finished
         while(EDITOR_STATE.is_building) {
-            // poll pipe for build thread and when its done close the fork
-
+            // SDL3 threading: poll build status and message
+            SDL_LockMutex(EDITOR_STATE.build_mutex);
+            int build_status = EDITOR_STATE.build_status;
             char buf[256];
-            int n = read(EDITOR_STATE.pipefd[0], buf, sizeof(buf));
-            if(n > 0){
-                buf[n] = '\0';
+            strncpy(buf, EDITOR_STATE.build_status_msg, sizeof(buf));
+            SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+
+            if (build_status != 0) { // 0 = running, 1 = done, 2 = error
                 ye_logf(info, "Build thread status: %s\n", buf);
-                if(strcmp(buf, "done") == 0){
-                    close(EDITOR_STATE.pipefd[0]);
-                    EDITOR_STATE.is_building = false;
-
-                    // cleanup zombie process
-                    int status;
-                    waitpid(EDITOR_STATE.building_thread, &status, 0);
-                }
-                if(strcmp(buf, "error") == 0){
-                    close(EDITOR_STATE.pipefd[0]);
-                    EDITOR_STATE.is_building = false;
-
-                    // cleanup zombie process
-                    int status;
-                    waitpid(EDITOR_STATE.building_thread, &status, 0);
-
+                EDITOR_STATE.is_building = false;
+                SDL_WaitThread(EDITOR_STATE.building_thread, NULL);
+                if (build_status == 2) {
                     ye_logf(error, "Build failed. Check the build log for more information.\n");
                 }
             }
@@ -527,6 +515,9 @@ int main(int argc, char **argv) {
         EDITOR_STATE.mode = ESTATE_EDITING;
     }
 
+    // initialize SDL build mutex for cross-platform build thread sync
+    EDITOR_STATE.build_mutex = SDL_CreateMutex();
+
     // core editor loop, depending on state
     while(!quit) {
         if(EDITOR_STATE.mode == ESTATE_WELCOME)
@@ -572,6 +563,9 @@ int main(int argc, char **argv) {
 
     // shutdown editor and teardown contextx
     editor_settings_ui_shutdown();
+
+    // destroy SDL build mutex
+    SDL_DestroyMutex(EDITOR_STATE.build_mutex);
 
     // exit
     return 0;

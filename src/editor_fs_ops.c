@@ -51,7 +51,7 @@ bool editor_rename_path(const char *src, const char *dst) {
     return res;
 }
 
-bool editor_delete_path(const char *path) {
+bool editor_delete_file(const char *path) {
     bool res = SDL_RemovePath(path);
 
     if(res) ye_logf(info, "EDITOR Deleted path: %s\n", path);
@@ -145,4 +145,64 @@ int editor_set_fs_times(const char *path, time_t access_time, time_t modificatio
 
     return utime(path, &times);
 #endif
+}
+
+#ifdef _WIN32
+    #include <direct.h>
+#else
+    #include <unistd.h>
+#endif
+
+bool editor_chdir(const char *path) {
+    #ifdef _WIN32
+        if (_chdir(path) == 0) {
+            ye_logf(info, "EDITOR Changed directory to: %s\n", path);
+            return true;
+        } else {
+            ye_logf(error, "EDITOR Failed to change directory to: %s. %s\n", path, SDL_GetError());
+            return false;
+        }
+    #else
+        if (chdir(path) == 0) {
+            ye_logf(info, "EDITOR Changed directory to: %s\n", path);
+            return true;
+        } else {
+            ye_logf(error, "EDITOR Failed to change directory to: %s. %s\n", path, SDL_GetError());
+            return false;
+        }
+    #endif
+}
+
+static SDL_EnumerationResult SDLCALL _recurse_delete_callback(void *userdata, const char *dirname, const char *fname) {
+    (void)userdata; // unused
+    
+    char path[512];
+    snprintf(path, sizeof(path), "%s/%s", dirname, fname);
+
+    if (SDL_RemovePath(path)) {
+        ye_logf(info, "EDITOR Deleted path: %s\n", path);
+    } else {
+        ye_logf(error, "EDITOR Failed to delete path: %s. %s\n", path, SDL_GetError());
+        return SDL_ENUM_FAILURE;
+    }
+
+    return SDL_ENUM_CONTINUE;
+}
+
+bool editor_recurse_delete_directory(const char *path) {
+    bool res = SDL_EnumerateDirectory(path, _recurse_delete_callback, NULL);
+
+    if (res) {
+        if (SDL_RemovePath(path)) {
+            ye_logf(info, "EDITOR Recursively deleted directory: %s\n", path);
+        } else {
+            ye_logf(error, "EDITOR Failed to delete directory: %s. %s\n", path, SDL_GetError());
+            return false;
+        }
+    } else {
+        ye_logf(error, "EDITOR Failed to recursively delete directory: %s. %s\n", path, SDL_GetError());
+        return false;
+    }
+
+    return true;
 }
