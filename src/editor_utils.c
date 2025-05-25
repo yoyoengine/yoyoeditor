@@ -63,3 +63,20 @@ bool editor_file_exists(const char *file_path) {
     }
     return false;
 }
+
+bool editor_update_window_title(const char *format, ...) {
+    char title[256];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(title, sizeof(title), format, args);
+    va_end(args);
+    
+    if (SDL_SetWindowTitle(YE_STATE.runtime.window, title)) {
+        ye_logf(info, "EDITOR Updated window title to: %s\n", title);
+        return true;
+    }
+    else{
+        ye_logf(error, "EDITOR Failed to update window title: %s\n", SDL_GetError());
+        return false;
+    }
+}

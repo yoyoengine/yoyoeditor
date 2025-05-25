@@ -18,6 +18,8 @@
 #include "editor_panels.h"
 #include "editor_selection.h"
 #include "editor_utils.h"
+#include "editor_file_picker.h"
+#include "editor_defs.h"
 
 #include <yoyoengine/ye_nk.h>
 
@@ -534,7 +536,27 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 nk_label(ctx, "What is the path (relative to resources/)?", NK_TEXT_CENTERED);
                 nk_label(ctx, "Ex: \"entry.yoyo\"", NK_TEXT_CENTERED);
                 nk_label(ctx, "", NK_TEXT_CENTERED);
+                nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
+                nk_layout_row_push(ctx, 0.65f);
                 nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, open_scene_name, 256, nk_filter_default);
+                nk_layout_row_push(ctx, 0.35f);
+                
+                if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_LEFT)) {
+                    editor_pick_resource_file(
+                        (struct editor_picker_data){
+                            .filter = editor_yoyo_filters,
+                            .num_filters = &editor_num_yoyo_filters,
+
+                            .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                            .dest.output_buf = {
+                                .buffer = open_scene_name,
+                                .size = sizeof(open_scene_name) - 1,
+                            },
+                        }
+                    );
+                }
+                
+                nk_layout_row_dynamic(ctx, 25, 1);
                 nk_label(ctx, "", NK_TEXT_CENTERED);
                 nk_layout_row_dynamic(ctx, 25, 2);
                 if(nk_button_label(ctx, "Abort")){
@@ -578,6 +600,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 ye_set_all_overlays(false);
 
                 EDITOR_STATE.mode = ESTATE_WELCOME;
+                editor_update_window_title("Yoyo Engine Editor - Home");
                 
                 free(EDITOR_STATE.opened_project_path);
                 EDITOR_STATE.opened_project_path = NULL;

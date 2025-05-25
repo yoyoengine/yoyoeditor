@@ -687,12 +687,13 @@ void group_projects(struct nk_context *ctx) {
                 // update again here since we moved stuff
                 project = json_array_get(projects, 0);
                 // const char *date_str = json_string_value(json_object_get(project, "date"));
-                // const char *name_str = json_string_value(json_object_get(project, "name"));
+                const char *name_str = json_string_value(json_object_get(project, "name"));
                 const char *path_str = json_string_value(json_object_get(project, "path"));
 
                 serialize_projects();
 
                 EDITOR_STATE.mode = ESTATE_EDITING;
+                editor_update_window_title("Yoyo Engine Editor - %s", name_str);
                 
                 if(EDITOR_STATE.opened_project_path){
                     free(EDITOR_STATE.opened_project_path);

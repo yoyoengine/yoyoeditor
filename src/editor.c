@@ -26,6 +26,7 @@
 #include "editor.h"
 #include "editor_ui.h"
 #include "editor_build.h"
+#include "editor_utils.h"
 #include "editor_input.h"
 #include "editor_panels.h"
 #include "editor_selection.h"
@@ -141,7 +142,7 @@ void yoyo_loading_refresh(char * status)
 
     SDL_RenderPresent(YE_STATE.runtime.renderer);
 
-    SDL_UpdateWindowSurface(YE_STATE.runtime.window);
+    // SDL_UpdateWindowSurface(YE_STATE.runtime.window); BAD!
 }
 
 // pointers to destroy icon textures on shutdown
@@ -189,6 +190,8 @@ void editor_welcome_loop() {
     editor_init_panel_welcome();
 
     ui_register_component("welcome", editor_panel_welcome);
+
+    editor_update_window_title("Yoyo Engine Editor - Home");
 
     while(EDITOR_STATE.mode == ESTATE_WELCOME){
         if(quit)

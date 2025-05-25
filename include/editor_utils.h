@@ -29,8 +29,19 @@ void editor_touch_file(const char *file_path, const char *content);
  * @brief Checks if a file exists.
  * 
  * @param file_path The path to the file
+ * 
  * @return true if the file exists, false otherwise
  */
 bool editor_file_exists(const char *file_path);
+
+/**
+ * @brief Updates the window title (takes a format string).
+ * 
+ * @param format The format string for the title
+ * @param ... The arguments for the format string
+ * 
+ * @return true if the title was updated successfully, false otherwise
+ */
+bool editor_update_window_title(const char *format, ...);
 
 #endif // EDITOR_UTILS_H
