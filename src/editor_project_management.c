@@ -20,7 +20,7 @@ void editor_create_new_project(const char *target_dir) {
     #if defined(__unix__) || defined(__linux__)
 
         // create path/to/proj/proj_name (aka target_dir)
-        if(!editor_create_directory(target_dir)){
+        if(!editor_mkdir(target_dir)){
             ye_logf(error, "Failed to create project at %s\n", target_dir);
             return;
         }

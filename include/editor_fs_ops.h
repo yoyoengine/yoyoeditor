@@ -9,18 +9,77 @@
 #ifndef YE_EDITOR_FS_OPS_H
 #define YE_EDITOR_FS_OPS_H
 
-enum dialog_type{
-    FILE_DIALOG,
-    FOLDER_DIALOG
-};
+/*
+    v2 SDL3 API
+*/
 
-// recurse copy a directory
-bool editor_copy_directory(const char *src, const char *dst);
+/**
+ * @brief Make a directory.
+ * 
+ * @param path The path to the directory to create 
+ * @return true on success, false on failure
+ */
+bool editor_mkdir(const char *path);
 
-// rename a directory or file
-bool editor_rename(const char *src, const char *dst);
+/**
+ * @brief Check if a file exists.
+ * 
+ * @param file_path The path to the file
+ * @return true if the file exists, false otherwise
+ */
+bool editor_file_exists(const char *file_path);
 
-// only works one level deep of new directories
-bool editor_create_directory(const char *path);
+/**
+ * @brief Rename a file or directory.
+ * 
+ * @param src The source path
+ * @param dst The destination path
+ * @return true on success, false on failure
+ */
+bool editor_rename_path(const char *src, const char *dst);
+
+/**
+ * @brief Delete a file or directory.
+ * 
+ * @param path The path to the file or directory to delete
+ * @return true on success, false on failure
+ */
+bool editor_delete_path(const char *path);
+
+/**
+ * @brief Copy a file or directory.
+ * 
+ * @param src The source path
+ * @param dst The destination path
+ * @return true on success, false on failure
+ */
+bool editor_copy_file(const char *src, const char *dst);
+
+/**
+ * @brief Recursively copy a directory.
+ * 
+ * @param src The source directory
+ * @param dst The destination directory
+ * @return true on success, false on failure
+ */
+bool editor_recurse_copy_directory(const char *src, const char *dst);
+
+/**
+ * @brief Touches a file with the given content.
+ * 
+ * @param file_path The path to the file (the folder will be created if it doesn't exist)
+ * @param content The content to write to the file, if any
+ */
+void editor_touch_file(const char *file_path, const char *content);
+
+/**
+ * @brief Sets the access and modification times of a file or folder.
+ * 
+ * @param path The path to the file or folder
+ * @param access_time The access time to set (0 to keep the current)
+ * @param modification_time The modification time to set (0 to keep the current)
+ * @return int 0 on success, -1 on error
+ */
+int editor_set_fs_times(const char *path, time_t access_time, time_t modification_time);
 
 #endif

@@ -6,116 +6,143 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef __linux__
-    #include <unistd.h>
-#else
-    #include <platform/windows/unistd.h>
-#endif
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-
-#include <yoyoengine/yoyoengine.h>
+#include <stdbool.h>
+#include <time.h>
 
 #include "editor.h"
 #include "editor_fs_ops.h"
 
-/*
-    This will be a (for now) platform specific implementation of certain fs ops.
-    TODO: NOTCROSSPLATFORM
-*/
+#ifdef _WIN32
+    #include <windows.h>
+    #include <sys/utime.h>
+    #include <io.h>
+#else
+    #include <utime.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
+#endif
 
-// recurse copy a directory
-bool editor_copy_directory(const char *src, const char *dst) {
-    DIR *dir = opendir(src);
-    if (!dir) {
-        ye_logf(error,"Failed to copy directory directory, could not open: %s\n", src);
-        return false;
-    }
+#include <yoyoengine/yoyoengine.h>
 
-    if (mkdir(dst, 0755) && errno != EEXIST) {
-        ye_logf(error,"Failed to copy directory directory, could not create: %s\n", dst);
-        closedir(dir);
-        return false;
-    }
+bool editor_mkdir(const char *path) {
+    bool res = SDL_CreateDirectory(path);
+    
+    if(res) ye_logf(info, "EDITOR Created directory: %s\n", path);
+    else    ye_logf(error, "EDITOR Failed to create directory: %s. %s\n", path, SDL_GetError());
 
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char src_path[PATH_MAX];
-        char dst_path[PATH_MAX];
-        snprintf(src_path, sizeof(src_path), "%s/%s", src, entry->d_name);
-        snprintf(dst_path, sizeof(dst_path), "%s/%s", dst, entry->d_name);
-
-        struct stat statbuf;
-        if (stat(src_path, &statbuf) == -1) {
-            ye_logf(error,"Failed to copy directory directory, could not stat: %s\n", src_path);
-            closedir(dir);
-            return false;
-        }
-
-        if (S_ISDIR(statbuf.st_mode)) {
-            if (!editor_copy_directory(src_path, dst_path)) {
-                closedir(dir);
-                return false;
-            }
-        } else {
-            int src_fd = open(src_path, O_RDONLY);
-            if (src_fd == -1) {
-                ye_logf(error,"Failed to copy directory directory, could not open src fd: %s\n", src_path);
-                closedir(dir);
-                return false;
-            }
-
-            int dst_fd = open(dst_path, O_WRONLY | O_CREAT | O_TRUNC, statbuf.st_mode);
-            if (dst_fd == -1) {
-                ye_logf(error,"Failed to copy directory directory, could not open dst fd: %s\n", dst_path);
-                close(src_fd);
-                closedir(dir);
-                return false;
-            }
-
-            char buffer[4096];
-            ssize_t bytes;
-            while ((bytes = read(src_fd, buffer, sizeof(buffer))) > 0) {
-                if (write(dst_fd, buffer, bytes) != bytes) {
-                    ye_logf(error,"Failed to copy directory directory, could not write: %s\n", dst_path);
-                    close(src_fd);
-                    close(dst_fd);
-                    closedir(dir);
-                    return false;
-                }
-            }
-
-            close(src_fd);
-            close(dst_fd);
-        }
-    }
-
-    closedir(dir);
-    return true;
+    return res;
 }
 
-// rename a directory or file
-bool editor_rename(const char *src, const char *dst) {
-    if (rename(src, dst) == -1) {
-        perror("rename");
-        return false;
-    }
-    return true;
+bool editor_file_exists(const char *path) {
+    bool res = SDL_GetPathInfo(path, NULL);
+
+    if(res) ye_logf(info, "EDITOR File exists: %s\n", path);
+    else    ye_logf(error, "EDITOR File does not exist: %s. %s\n", path, SDL_GetError());
+
+    return res;
 }
 
-// only works one level deep of new directories
-bool editor_create_directory(const char *path) {
-    if (mkdir(path, 0755) && errno != EEXIST) {
-        ye_logf(error,"Failed to create directory, could not create: %s\n", path);
-        return false;
+bool editor_rename_path(const char *src, const char *dst) {
+    bool res = SDL_RenamePath(src, dst);
+
+    if(res) ye_logf(info, "EDITOR Renamed path from %s to %s\n", src, dst);
+    else    ye_logf(error, "EDITOR Failed to rename path from %s to %s. %s\n", src, dst, SDL_GetError());
+
+    return res;
+}
+
+bool editor_delete_path(const char *path) {
+    bool res = SDL_RemovePath(path);
+
+    if(res) ye_logf(info, "EDITOR Deleted path: %s\n", path);
+    else    ye_logf(error, "EDITOR Failed to delete path: %s. %s\n", path, SDL_GetError());
+
+    return res;
+}
+
+bool editor_copy_file(const char *src, const char *dst) {
+    bool res = SDL_CopyFile(src, dst);
+
+    if(res) ye_logf(info, "EDITOR Copied file from %s to %s\n", src, dst);
+    else    ye_logf(error, "EDITOR Failed to copy file from %s to %s. %s\n", src, dst, SDL_GetError());
+
+    return res;
+}
+
+static SDL_EnumerationResult SDLCALL _recurse_copy_callback(void *userdata, const char *dirname, const char *fname) {
+    char src[512];
+    char dst[512];
+
+    snprintf(src, sizeof(src), "%s/%s", dirname, fname);
+    snprintf(dst, sizeof(dst), "%s/%s", (const char *)userdata, fname);
+
+    if(SDL_CopyFile(src, dst)) {
+        ye_logf(info, "EDITOR Copied file from %s to %s\n", src, dst);
+    } else {
+        ye_logf(error, "EDITOR Failed to copy file from %s to %s. %s\n", src, dst, SDL_GetError());
+        return SDL_ENUM_FAILURE;
     }
-    return true;
+
+    return SDL_ENUM_CONTINUE;
+}
+
+bool editor_recurse_copy_directory(const char *src, const char *dst) {
+    bool res = SDL_EnumerateDirectory(src, _recurse_copy_callback, NULL);
+
+    if(res) ye_logf(info, "EDITOR Recursively copied directory from %s to %s\n", src, dst);
+    else    ye_logf(error, "EDITOR Failed to recursively copy directory from %s to %s. %s\n", src, dst, SDL_GetError());
+
+    return res;
+}
+
+void editor_touch_file(const char *file_path, const char *content) {
+    // ensure the directory exists
+    char *dir = strdup(file_path);
+    char *last_slash = strrchr(dir, '/');
+    if (last_slash) {
+        *last_slash = '\0';
+        editor_mkdir(dir);
+    }
+    free(dir);
+
+    FILE *file = fopen(file_path, "w");
+    if (file) {
+        if(content != NULL)
+            fprintf(file, "%s", content);
+        fclose(file);
+        ye_logf(debug, "EDITOR Touched file: %s\n", file_path);
+    }
+    else {
+        ye_logf(error, "EDITOR Failed to touch file: %s\n", file_path);
+    }
+}
+
+int editor_set_fs_times(const char *path, time_t access_time, time_t modification_time) {
+#ifdef _WIN32
+    struct _utimbuf times;
+    struct _stat st;
+
+    if (_stat(path, &st) != 0) {
+        perror("stat failed");
+        return -1;
+    }
+
+    times.actime = (access_time > 0) ? access_time : st.st_atime;
+    times.modtime = (modification_time > 0) ? modification_time : st.st_mtime;
+
+    return _utime(path, &times);
+#else
+    struct utimbuf times;
+    struct stat st;
+
+    if (stat(path, &st) != 0) {
+        perror("stat failed");
+        return -1;
+    }
+
+    times.actime = (access_time > 0) ? access_time : st.st_atime;
+    times.modtime = (modification_time > 0) ? modification_time : st.st_mtime;
+
+    return utime(path, &times);
+#endif
 }
