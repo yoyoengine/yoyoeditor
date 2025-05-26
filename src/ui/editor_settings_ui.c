@@ -10,9 +10,6 @@
 #include "editor_build.h"
 #include "editor_panels.h"
 #include "editor_utils.h"
-#include "editor_fs_ops.h"
-#include "editor_defs.h"
-#include "editor_file_picker.h"
 #include <yoyoengine/yoyoengine.h>
 #ifdef __linux__
     #include <unistd.h>
@@ -136,12 +133,12 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                editor_pick_resource_file(
-                    (struct editor_picker_data){
-                        .filter = editor_any_filters,
-                        .num_filters = &editor_num_any_filters,
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_any_filters,
+                        .num_filters = &ye_picker_num_any_filters,
 
-                        .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                         .dest.output_buf = {
                             .buffer = project_icon_path,
                             .size = sizeof(project_icon_path) - 1,
@@ -166,12 +163,12 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                editor_pick_resource_file(
-                    (struct editor_picker_data){
-                        .filter = editor_yoyo_filters,
-                        .num_filters = &editor_num_yoyo_filters,
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_yoyo_filters,
+                        .num_filters = &ye_picker_num_yoyo_filters,
 
-                        .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                         .dest.output_buf = {
                             .buffer = project_entry_scene,
                             .size = sizeof(project_entry_scene) - 1,
@@ -349,12 +346,12 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                editor_pick_resource_file(
-                    (struct editor_picker_data){
-                        .filter = editor_icon_filters,
-                        .num_filters = &editor_num_icon_filters,
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_icon_filters,
+                        .num_filters = &ye_picker_num_icon_filters,
 
-                        .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                         .dest.output_buf = {
                             .buffer = build_rc_path,
                             .size = sizeof(build_rc_path) - 1,

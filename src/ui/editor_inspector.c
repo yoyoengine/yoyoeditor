@@ -20,9 +20,6 @@
 #include "editor_panels.h"
 #include "editor_selection.h"
 #include "editor_utils.h"
-#include "editor_fs_ops.h"
-#include "editor_defs.h"
-#include "editor_file_picker.h"
 
 /*
     Some variables used globally
@@ -305,13 +302,13 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
                         nk_layout_row_push(ctx, 0.05);
                         nk_layout_row_push(ctx, 0.2);
                         if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-                            editor_pick_resource_file(
-                                (struct editor_picker_data){
-                                    .filter = editor_image_filters,
-                                    .num_filters = &editor_num_image_filters,
+                            ye_pick_resource_file(
+                                (struct ye_picker_data){
+                                    .filter = ye_picker_image_filters,
+                                    .num_filters = &ye_picker_num_image_filters,
                                     .userdata = (void*)ent,
             
-                                    .response_mode = EDITOR_PICKER_FWD_CB,
+                                    .response_mode = YE_PICKER_FWD_CB,
                                     .dest.callback = editor_browse_renderer_image_cb
                                 }
                             );
@@ -967,12 +964,12 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
         // browse
         nk_layout_row_push(ctx, 0.20);
         if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-            editor_pick_resource_file(
-                (struct editor_picker_data){
-                    .filter = editor_script_filters,
-                    .num_filters = &editor_num_script_filters,
+            ye_pick_resource_file(
+                (struct ye_picker_data){
+                    .filter = ye_picker_script_filters,
+                    .num_filters = &ye_picker_num_script_filters,
 
-                    .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                    .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                     .dest.output_buf = {
                         .buffer = proposed_script_path,
                         .size = sizeof(proposed_script_path),
@@ -986,8 +983,8 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
         if(nk_button_label(ctx, "Add Script Component")){
 
             // if file does not exist, lets create it
-            if(!editor_file_exists(ye_path_resources(proposed_script_path))){
-                editor_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
+            if(!ye_file_exists(ye_path_resources(proposed_script_path))){
+                ye_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
             }
 
             ye_add_lua_script_component(ent, proposed_script_path, NULL); // TODO: lua system hasnt been updated for yep yet. we need to read from bytecode or just content
@@ -1097,12 +1094,12 @@ void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
             // browse
             nk_layout_row_push(ctx, 0.20);
             if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-                editor_pick_resource_file(
-                    (struct editor_picker_data){
-                        .filter = editor_audio_filters,
-                        .num_filters = &editor_num_audio_filters,
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_audio_filters,
+                        .num_filters = &ye_picker_num_audio_filters,
     
-                        .response_mode = EDITOR_PICKER_FWD_CB,
+                        .response_mode = YE_PICKER_FWD_CB,
                         .dest.callback = editor_browse_audio_ret,
                         .userdata = (void*)ent,
                     }

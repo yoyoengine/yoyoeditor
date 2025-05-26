@@ -8,7 +8,6 @@
 #include <time.h>
 
 #include "editor.h"
-#include "editor_fs_ops.h"
 
 #include <yoyoengine/yoyoengine.h>
 
@@ -450,7 +449,7 @@ void editor_write_scene_to_disk(const char *path){
     // write the scene file
     ye_json_write(ye_path_resources(YE_STATE.runtime.scene_file_path), scene);           
 
-    if(editor_set_fs_times(ye_path_resources(YE_STATE.runtime.scene_file_path), time(NULL), time(NULL)) != 0){
+    if(ye_set_fs_times(ye_path_resources(YE_STATE.runtime.scene_file_path), time(NULL), time(NULL)) != 0){
         ye_logf(error, "failed to update file access time for %s\n", ye_path_resources(YE_STATE.runtime.scene_file_path));
     }
 }

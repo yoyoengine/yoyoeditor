@@ -13,14 +13,13 @@
 #include <yoyoengine/yoyoengine.h>
 
 #include "editor_build.h"
-#include "editor_fs_ops.h"
 
 void editor_create_new_project(const char *target_dir) {
 
     #if defined(__unix__) || defined(__linux__)
 
         // create path/to/proj/proj_name (aka target_dir)
-        if(!editor_mkdir(target_dir)){
+        if(!ye_mkdir(target_dir)){
             ye_logf(error, "Failed to create project at %s\n", target_dir);
             return;
         }

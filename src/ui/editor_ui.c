@@ -18,9 +18,6 @@
 #include "editor_panels.h"
 #include "editor_selection.h"
 #include "editor_utils.h"
-#include "editor_file_picker.h"
-#include "editor_defs.h"
-#include "editor_fs_ops.h"
 
 #include <yoyoengine/ye_nk.h>
 
@@ -509,7 +506,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     lock_viewport_interaction = !lock_viewport_interaction;
                 }
                 if(nk_button_label(ctx, "Yes")){
-                    if(editor_delete_file(YE_STATE.runtime.scene_file_path)){
+                    if(ye_delete_file(YE_STATE.runtime.scene_file_path)){
                         ye_logf(info, "Deleted scene %s\n", YE_STATE.runtime.scene_file_path);
                     }
                     else{
@@ -543,12 +540,12 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 nk_layout_row_push(ctx, 0.35f);
                 
                 if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_LEFT)) {
-                    editor_pick_resource_file(
-                        (struct editor_picker_data){
-                            .filter = editor_yoyo_filters,
-                            .num_filters = &editor_num_yoyo_filters,
+                    ye_pick_resource_file(
+                        (struct ye_picker_data){
+                            .filter = ye_picker_yoyo_filters,
+                            .num_filters = &ye_picker_num_yoyo_filters,
 
-                            .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                            .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                             .dest.output_buf = {
                                 .buffer = open_scene_name,
                                 .size = sizeof(open_scene_name) - 1,

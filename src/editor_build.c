@@ -18,7 +18,6 @@
 #include <fcntl.h>
 
 #include "editor.h"
-#include "editor_fs_ops.h"
 
 #include <yoyoengine/yoyoengine.h>
 
@@ -185,7 +184,7 @@ error:
 }
 
 void editor_run() {
-    if (!editor_chdir(ye_path("build"))) {
+    if (!ye_chdir(ye_path("build"))) {
         ye_logf(error, "Failed to change to build directory.\n");
         return;
     }
@@ -231,7 +230,7 @@ static int build_thread_func(void *userdata) {
     }
 
     if(force_configure || json_boolean_value(json_object_get(BUILD_FILE, "delete_cache"))) {
-        editor_delete_file(ye_path("build/CMakeCache.txt"));
+        ye_delete_file(ye_path("build/CMakeCache.txt"));
         json_object_set_new(BUILD_FILE, "delete_cache", json_false());
     }
 
@@ -259,10 +258,10 @@ static int build_thread_func(void *userdata) {
     }
 
     // create build dir (cross-platform)
-    editor_mkdir(ye_path("build"));
-    editor_chdir(ye_path("build"));
+    ye_mkdir(ye_path("build"));
+    ye_chdir(ye_path("build"));
 
-    bool cmake_cache_exists = editor_file_exists(ye_path("build/CMakeCache.txt"));
+    bool cmake_cache_exists = ye_file_exists(ye_path("build/CMakeCache.txt"));
 
     // CMake step
     if (force_configure || !cmake_cache_exists) {

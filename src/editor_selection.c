@@ -127,7 +127,7 @@ void editor_selection_handler(SDL_Event event){
     }
 
     // update mx and my to be world positions
-    // my = my - 35; // account for the menu bar
+    my = my - 35; // account for the menu bar
 
     float scaleX = (float)YE_STATE.engine.screen_width / (float)YE_STATE.engine.target_camera->camera->view_field.w;
     float scaleY = (float)YE_STATE.engine.screen_height / (float)YE_STATE.engine.target_camera->camera->view_field.h;

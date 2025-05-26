@@ -16,7 +16,6 @@
 
 #include "editor.h"
 #include "editor_utils.h"
-#include "editor_fs_ops.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -84,6 +83,7 @@ void _load_tricks_meta(char *path, char *parent_folder){
 
         closedir(dir);
     #else
+        // TODO: NOTCROSSPLATFORM
         ye_logf(error, "THE EDITOR IS NOT SUPPORTED ON WINDOWS!\n");
         return;
     #endif
@@ -91,7 +91,7 @@ void _load_tricks_meta(char *path, char *parent_folder){
 
 void _re_cache_tricks_meta(){
     // remove the tricks.yoyo file
-    editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
+    ye_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
     ye_logf(debug, "Removed cached tricks_editor_cache.yoyo file\n");
 
     // cache for later
@@ -180,7 +180,7 @@ void editor_panel_tricks(struct nk_context *ctx){
                     json_decref(tricks_meta);
                     tricks_meta = NULL;
 
-                    editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
+                    ye_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
 
                     load_tricks_meta(ye_path("tricks/tricks_editor_cache.yoyo"));
                     _re_cache_tricks_meta();
@@ -205,7 +205,7 @@ void editor_panel_tricks(struct nk_context *ctx){
             tricks_meta = NULL;
 
             // remove the tricks.yoyo file
-            editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
+            ye_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
             ye_logf(debug, "Removed cached tricks_editor_cache.yoyo file\n");
         }
         if(nk_button_label(ctx, "open tricks folder")){
@@ -266,12 +266,12 @@ void editor_panel_tricks(struct nk_context *ctx){
                 // delete it
                 char path[512];
                 snprintf(path, sizeof(path), "%s/%s", ye_path("tricks/"),f);
-                editor_recurse_delete_directory(path);
+                ye_recurse_delete_dir(path);
 
                 json_decref(tricks_meta);
                 tricks_meta = NULL;
 
-                editor_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
+                ye_delete_file(ye_path("tricks/tricks_editor_cache.yoyo"));
 
                 load_tricks_meta(ye_path("tricks/tricks_editor_cache.yoyo"));
                 _re_cache_tricks_meta();

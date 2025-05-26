@@ -23,10 +23,8 @@
 
 #include "editor.h"
 #include "editor_panels.h"
-#include "editor_fs_ops.h"
 #include "editor_utils.h"
 #include "editor_project_management.h"
-#include "editor_file_picker.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -514,13 +512,13 @@ void create_project_popup(struct nk_context *ctx) {
 
         if(nk_button_image_label(ctx, editor_icons.folder, "browse", NK_TEXT_CENTERED)){
             // SDL_ShowOpenFolderDialog(editor_browse_new_project_cb, NULL, YE_STATE.runtime.window, NULL, false);
-            editor_pick_folder(
-                (struct editor_picker_data){
+            ye_pick_folder(
+                (struct ye_picker_data){
                     .filter = NULL,
                     .num_filters = NULL,
                     .default_location = NULL,
 
-                    .response_mode = EDITOR_PICKER_WRITE_CHAR_BUF,
+                    .response_mode = YE_PICKER_WRITE_CHAR_BUF,
                     .dest.output_buf = {
                         .buffer = new_proj_path,
                         .size = sizeof(new_proj_path) - 1,
@@ -590,13 +588,13 @@ void group_projects(struct nk_context *ctx) {
             ye_logf(info, "Open Existing Project\n");
 
             // open file dialog
-            editor_pick_folder(
-                (struct editor_picker_data){
+            ye_pick_folder(
+                (struct ye_picker_data){
                     .filter = NULL,
                     .num_filters = NULL,
                     .default_location = NULL,
 
-                    .response_mode = EDITOR_PICKER_FWD_CB,
+                    .response_mode = YE_PICKER_FWD_CB,
                     .dest.callback = editor_browse_existing_project_cb
                 }
             );
