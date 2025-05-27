@@ -10,12 +10,16 @@
 #include <string.h>
 #ifdef __linux__
     #include <unistd.h>
+    #include <sys/wait.h>
+    #include <fcntl.h>
 #else
     #include <platform/windows/unistd.h>
+    // Windows doesn't have sys/wait.h
+    // For fcntl.h on Windows, we'll use Windows-specific headers
+    #include <io.h>
+    #include <fcntl.h>
 #endif
 #include <stdbool.h>
-#include <sys/wait.h>
-#include <fcntl.h>
 
 #include "editor.h"
 

@@ -262,14 +262,14 @@ void editor_selection_handler(SDL_Event event){
     }
 }
 
-SDL_Color purple = (SDL_Color){255, 0, 255, 225};
-SDL_Color red = (SDL_Color){255, 0, 0, 225};
-SDL_Color green = (SDL_Color){0, 255, 0, 225};
-SDL_Color blue = (SDL_Color){0, 0, 255, 225};
-SDL_Color orange = (SDL_Color){255, 165, 0, 225};
-SDL_Color yellow = (SDL_Color){255, 255, 0, 225};
-SDL_Color fade_yellow = (SDL_Color){255, 255, 0, 100};
-SDL_Color pink = (SDL_Color){255, 105, 180, 225};
+static const SDL_Color purple = {255, 0, 255, 225};
+static const SDL_Color red = {255, 0, 0, 225};
+static const SDL_Color green = {0, 255, 0, 225};
+static const SDL_Color blue = {0, 0, 255, 225};
+static const SDL_Color orange = {255, 165, 0, 225};
+static const SDL_Color yellow = {255, 255, 0, 225};
+static const SDL_Color fade_yellow = {255, 255, 0, 100};
+static const SDL_Color pink = {255, 105, 180, 225};
 
 /*
     TODO: honestly, for selected entities we should always display their

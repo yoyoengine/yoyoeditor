@@ -10,10 +10,11 @@
 #include <time.h>
 #ifdef __linux__
     #include <unistd.h>
+    #include <pwd.h>
 #else
     #include <platform/windows/unistd.h>
+    // Windows doesn't have pwd.h, so we'll provide a fallback
 #endif
-#include <pwd.h>
 
 #include <curl/curl.h>
 
@@ -153,7 +154,17 @@ const char* expand_tilde(const char *path) {
     if (path[0] == '~') {
         const char *home = getenv("HOME");
         if (!home) {
+#ifdef __linux__
             home = getpwuid(getuid())->pw_dir;
+#else
+            // Windows fallback - try USERPROFILE environment variable
+            home = getenv("USERPROFILE");
+            if (!home) {
+                // Ultimate fallback for Windows
+                home = "C:\\Users\\Default";
+            }
+            // WINDOWSPORT
+#endif
         }
         snprintf(expanded_path, sizeof(expanded_path), "%s%s", home, path + 1);
     } else {
