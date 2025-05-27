@@ -506,7 +506,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     lock_viewport_interaction = !lock_viewport_interaction;
                 }
                 if(nk_button_label(ctx, "Yes")){
-                    if(remove(YE_STATE.runtime.scene_file_path) == 0){
+                    if(ye_delete_file(YE_STATE.runtime.scene_file_path)){
                         ye_logf(info, "Deleted scene %s\n", YE_STATE.runtime.scene_file_path);
                     }
                     else{
@@ -534,7 +534,27 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 nk_label(ctx, "What is the path (relative to resources/)?", NK_TEXT_CENTERED);
                 nk_label(ctx, "Ex: \"entry.yoyo\"", NK_TEXT_CENTERED);
                 nk_label(ctx, "", NK_TEXT_CENTERED);
+                nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
+                nk_layout_row_push(ctx, 0.65f);
                 nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, open_scene_name, 256, nk_filter_default);
+                nk_layout_row_push(ctx, 0.35f);
+                
+                if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_LEFT)) {
+                    ye_pick_resource_file(
+                        (struct ye_picker_data){
+                            .filter = ye_picker_yoyo_filters,
+                            .num_filters = &ye_picker_num_yoyo_filters,
+
+                            .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                            .dest.output_buf = {
+                                .buffer = open_scene_name,
+                                .size = sizeof(open_scene_name) - 1,
+                            },
+                        }
+                    );
+                }
+                
+                nk_layout_row_dynamic(ctx, 25, 1);
                 nk_label(ctx, "", NK_TEXT_CENTERED);
                 nk_layout_row_dynamic(ctx, 25, 2);
                 if(nk_button_label(ctx, "Abort")){
@@ -578,9 +598,12 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 ye_set_all_overlays(false);
 
                 EDITOR_STATE.mode = ESTATE_WELCOME;
+                editor_update_window_title("Yoyo Engine Editor - Home");
                 
                 free(EDITOR_STATE.opened_project_path);
                 EDITOR_STATE.opened_project_path = NULL;
+                free(EDITOR_STATE.opened_project_resources_path);
+                EDITOR_STATE.opened_project_resources_path = NULL;
             }
             nk_menu_end(ctx);
 

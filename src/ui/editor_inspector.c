@@ -20,7 +20,6 @@
 #include "editor_panels.h"
 #include "editor_selection.h"
 #include "editor_utils.h"
-#include "editor_fs_ops.h"
 
 /*
     Some variables used globally
@@ -101,6 +100,36 @@ void _paint_transform(struct nk_context *ctx, struct ye_entity *ent){
             editor_unsaved();
         }
     }
+}
+
+static void SDLCALL editor_browse_renderer_image_cb(void* userdata, const char* const* filelist, int filter){
+    if(!filelist) {
+        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
+        return;
+    }
+    else if (!*filelist) {
+        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
+        return;
+    }
+
+    const char *selected_path = *filelist;
+    const char *resources_subpath = strstr(selected_path, "resources/");
+    if (resources_subpath) {
+        selected_path = resources_subpath + strlen("resources/");
+    }
+    // TODO: can we just limit the scope of where the file picker can go?
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", selected_path);
+
+    struct ye_entity *ent = (struct ye_entity*)userdata;
+    free(ent->renderer->renderer_impl.image->src);
+    ent->renderer->renderer_impl.image->src = strdup(selected_path);
+    // recomputes the image texture
+    ye_update_renderer_component(ent);
+    editor_unsaved();
+    
+    (void)userdata; // unused
+    (void)filter; // unused
 }
 
 void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
@@ -273,14 +302,16 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
                         nk_layout_row_push(ctx, 0.05);
                         nk_layout_row_push(ctx, 0.2);
                         if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-                            char *new_src = editor_file_dialog_select_resource("*.png *.jpg *.jpeg");
-                            if(new_src != NULL){
-                                free(ent->renderer->renderer_impl.image->src);
-                                ent->renderer->renderer_impl.image->src = new_src;
-                                // recomputes the image texture
-                                ye_update_renderer_component(ent);
-                                editor_unsaved();
-                            }
+                            ye_pick_resource_file(
+                                (struct ye_picker_data){
+                                    .filter = ye_picker_image_filters,
+                                    .num_filters = &ye_picker_num_image_filters,
+                                    .userdata = (void*)ent,
+            
+                                    .response_mode = YE_PICKER_FWD_CB,
+                                    .dest.callback = editor_browse_renderer_image_cb
+                                }
+                            );
                         }
 
                         break;
@@ -933,12 +964,18 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
         // browse
         nk_layout_row_push(ctx, 0.20);
         if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-            char *path = editor_file_dialog_select_resource("*.lua");
-            if(path != NULL){
-                strncpy(proposed_script_path, path, sizeof(proposed_script_path));
-                proposed_script_path[sizeof(proposed_script_path) - 1] = '\0';  // Ensure null-termination
-                free(path);
-            }
+            ye_pick_resource_file(
+                (struct ye_picker_data){
+                    .filter = ye_picker_script_filters,
+                    .num_filters = &ye_picker_num_script_filters,
+
+                    .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                    .dest.output_buf = {
+                        .buffer = proposed_script_path,
+                        .size = sizeof(proposed_script_path),
+                    },
+                }
+            );
         }
 
         nk_layout_row_dynamic(ctx, 25, 1);
@@ -946,14 +983,40 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
         if(nk_button_label(ctx, "Add Script Component")){
 
             // if file does not exist, lets create it
-            if(!editor_file_exists(ye_path_resources(proposed_script_path))){
-                editor_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
+            if(!ye_file_exists(ye_path_resources(proposed_script_path))){
+                ye_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
             }
 
             ye_add_lua_script_component(ent, proposed_script_path, NULL); // TODO: lua system hasnt been updated for yep yet. we need to read from bytecode or just content
             editor_unsaved();
         }
     }
+}
+
+static void SDLCALL editor_browse_audio_ret(void* userdata, const char* const* filelist, int filter){
+    const char *selected_path = *filelist;
+    const char *resources_subpath = strstr(selected_path, "resources/");
+    if (resources_subpath) {
+        selected_path = resources_subpath + strlen("resources/");
+    }
+    // TODO: can refactor picker to do this on every callback if checked later
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", selected_path);
+
+    struct ye_entity *ent = (struct ye_entity*)userdata;
+    if(ent && ent->audiosource && ent->audiosource->handle){
+        // free the old path
+        free(ent->audiosource->handle);
+    }
+    else{
+        ye_logf(YE_LL_ERROR, "Failed to set audio source path, entity or audiosource is NULL\n");
+        return;
+    }
+
+    ent->audiosource->handle = strdup(selected_path);
+    editor_unsaved();
+    
+    (void)filter; // unused
 }
 
 void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
@@ -1031,12 +1094,16 @@ void _paint_audiosource(struct nk_context *ctx, struct ye_entity *ent){
             // browse
             nk_layout_row_push(ctx, 0.20);
             if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-                char *path = editor_file_dialog_select_resource("*.wav *.mp3");
-                if(path != NULL){
-                    strncpy(temp_buffer_handle, path, sizeof(temp_buffer_handle));
-                    temp_buffer_handle[sizeof(temp_buffer_handle) - 1] = '\0';  // Ensure null-termination
-                    free(path);
-                }
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_audio_filters,
+                        .num_filters = &ye_picker_num_audio_filters,
+    
+                        .response_mode = YE_PICKER_FWD_CB,
+                        .dest.callback = editor_browse_audio_ret,
+                        .userdata = (void*)ent,
+                    }
+                );
             }
 
             if(_audiosource_disabled)

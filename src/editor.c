@@ -26,6 +26,7 @@
 #include "editor.h"
 #include "editor_ui.h"
 #include "editor_build.h"
+#include "editor_utils.h"
 #include "editor_input.h"
 #include "editor_panels.h"
 #include "editor_selection.h"
@@ -132,16 +133,16 @@ void yoyo_loading_refresh(char * status)
     SDL_SetRenderDrawColor(YE_STATE.runtime.renderer, 0, 0, 0, 255);
     SDL_RenderClear(YE_STATE.runtime.renderer);
 
-    SDL_RenderSetViewport(YE_STATE.runtime.renderer, NULL);
-    SDL_RenderSetScale(YE_STATE.runtime.renderer, 1.0f, 1.0f);
+    SDL_SetRenderViewport(YE_STATE.runtime.renderer, NULL);
+    SDL_SetRenderScale(YE_STATE.runtime.renderer, 1.0f, 1.0f);
 
     // paint just the loading
     editor_panel_loading(YE_STATE.engine.ctx);
-    nk_sdl_render(NK_ANTI_ALIASING_ON);
+    nk_sdl_render(YE_STATE.engine.ctx, NK_ANTI_ALIASING_ON);
 
     SDL_RenderPresent(YE_STATE.runtime.renderer);
 
-    SDL_UpdateWindowSurface(YE_STATE.runtime.window);
+    // SDL_UpdateWindowSurface(YE_STATE.runtime.window); BAD!
 }
 
 // pointers to destroy icon textures on shutdown
@@ -163,14 +164,12 @@ SDL_Texture * refresh_tex           = NULL;
 SDL_Texture * lightheader           = NULL;
 
 void editor_pre_handle_input(SDL_Event event){
-    if (event.type == SDL_QUIT)
+    if (event.type == SDL_EVENT_QUIT)
         quit = true;
 
-    if(event.type == SDL_WINDOWEVENT) {
-        if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-            screenWidth = event.window.data1;
-            screenHeight = event.window.data2;
-        }
+    if(event.type == SDL_EVENT_WINDOW_RESIZED) {
+        screenWidth = event.window.data1;
+        screenHeight = event.window.data2;
     }
 }
 
@@ -191,6 +190,8 @@ void editor_welcome_loop() {
     editor_init_panel_welcome();
 
     ui_register_component("welcome", editor_panel_welcome);
+
+    editor_update_window_title("Yoyo Engine Editor - Home");
 
     while(EDITOR_STATE.mode == ESTATE_WELCOME){
         if(quit)
@@ -308,32 +309,20 @@ void editor_editing_loop() {
     // core editing loop
     while(EDITOR_STATE.mode == ESTATE_EDITING && !quit) {
 
-        // if we are building, check if the build thread has finished to avoid zombie processes
-        // NOTCROSSPLATFORM
+        // if we are building, check if the build thread has finished
         while(EDITOR_STATE.is_building) {
-            // poll pipe for build thread and when its done close the fork
-
+            // SDL3 threading: poll build status and message
+            SDL_LockMutex(EDITOR_STATE.build_mutex);
+            int build_status = EDITOR_STATE.build_status;
             char buf[256];
-            int n = read(EDITOR_STATE.pipefd[0], buf, sizeof(buf));
-            if(n > 0){
-                buf[n] = '\0';
+            strncpy(buf, EDITOR_STATE.build_status_msg, sizeof(buf));
+            SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+
+            if (build_status != 0) { // 0 = running, 1 = done, 2 = error
                 ye_logf(info, "Build thread status: %s\n", buf);
-                if(strcmp(buf, "done") == 0){
-                    close(EDITOR_STATE.pipefd[0]);
-                    EDITOR_STATE.is_building = false;
-
-                    // cleanup zombie process
-                    int status;
-                    waitpid(EDITOR_STATE.building_thread, &status, 0);
-                }
-                if(strcmp(buf, "error") == 0){
-                    close(EDITOR_STATE.pipefd[0]);
-                    EDITOR_STATE.is_building = false;
-
-                    // cleanup zombie process
-                    int status;
-                    waitpid(EDITOR_STATE.building_thread, &status, 0);
-
+                EDITOR_STATE.is_building = false;
+                SDL_WaitThread(EDITOR_STATE.building_thread, NULL);
+                if (build_status == 2) {
                     ye_logf(error, "Build failed. Check the build log for more information.\n");
                 }
             }
@@ -389,7 +378,7 @@ int main(int argc, char **argv) {
         Do some custom sdl setup for the editor specifically
     */
     // allow window resizing
-    SDL_SetWindowResizable(YE_STATE.runtime.window, SDL_TRUE); // maybe expose this in the json later on
+    SDL_SetWindowResizable(YE_STATE.runtime.window, true); // maybe expose this in the json later on
     SDL_SetWindowMinimumSize(YE_STATE.runtime.window, 1280, 720); // also maybe expose this as an option.
     /*
         The thing about exposing these in json is that any competant dev (not that I am one) or anyone else (nobody will use this engine but me)
@@ -399,7 +388,7 @@ int main(int argc, char **argv) {
     /*
         Set the editor settings path
     */
-    editor_base_path = SDL_GetBasePath();
+    editor_base_path = strdup(SDL_GetBasePath());
     snprintf(editor_settings_path, sizeof(editor_settings_path), "%s./editor.yoyo", editor_base_path);
 
     yoyo_loading_refresh("Reading editor settings...");
@@ -410,7 +399,7 @@ int main(int argc, char **argv) {
         SDL_Surface *tmp_sur = IMG_Load(editor_resources_path(PATH));                   \
         TEXTURE_VAR = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, tmp_sur); \
         ICON_FIELD = nk_image_ptr(TEXTURE_VAR);                                         \
-        SDL_FreeSurface(tmp_sur);                                                       \
+        SDL_DestroySurface(tmp_sur);                                                       \
     } while(0)
 
     INIT_EDITOR_TEXTURE("edicons/edicon_style.png", style_tex, editor_icons.style);
@@ -521,8 +510,13 @@ int main(int argc, char **argv) {
             path[strlen(path) - 1] = '\0';
 
         EDITOR_STATE.opened_project_path = strdup(path); // TODO: free me :-0
+        EDITOR_STATE.opened_project_resources_path = malloc(strlen(path) + strlen("resources/") + 1);
+        snprintf(EDITOR_STATE.opened_project_resources_path, strlen(path) + strlen("resources/") + 1, "%s/resources/", path);
         EDITOR_STATE.mode = ESTATE_EDITING;
     }
+
+    // initialize SDL build mutex for cross-platform build thread sync
+    EDITOR_STATE.build_mutex = SDL_CreateMutex();
 
     // core editor loop, depending on state
     while(!quit) {
@@ -569,6 +563,9 @@ int main(int argc, char **argv) {
 
     // shutdown editor and teardown contextx
     editor_settings_ui_shutdown();
+
+    // destroy SDL build mutex
+    SDL_DestroyMutex(EDITOR_STATE.build_mutex);
 
     // exit
     return 0;

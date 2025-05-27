@@ -115,21 +115,19 @@ void select_within(SDL_Rect zone){
 
 void editor_selection_handler(SDL_Event event){
     // check if mouse left window
-    if(event.type == SDL_WINDOWEVENT){
-        if (event.window.event == SDL_WINDOWEVENT_LEAVE) {
-            is_dragging = false; editor_draw_drag_rect = false;
-        }
+    if(event.type & SDL_EVENT_WINDOW_MOUSE_LEAVE){
+        is_dragging = false; editor_draw_drag_rect = false;
     }
 
     // if we arent hovering editor ignore
-    int mx, my; SDL_GetMouseState(&mx, &my);
+    float mx, my; SDL_GetMouseState(&mx, &my);
     if(!is_hovering_editor(mx, my) || lock_viewport_interaction) {
         is_dragging = false; editor_draw_drag_rect = false;
         return;
     }
 
     // update mx and my to be world positions
-    // my = my - 35; // account for the menu bar
+    my = my - 35; // account for the menu bar
 
     float scaleX = (float)YE_STATE.engine.screen_width / (float)YE_STATE.engine.target_camera->camera->view_field.w;
     float scaleY = (float)YE_STATE.engine.screen_height / (float)YE_STATE.engine.target_camera->camera->view_field.h;
@@ -138,14 +136,14 @@ void editor_selection_handler(SDL_Event event){
     my = ((my / scaleY) + campos.y);
 
     if(is_dragging)
-        editor_draw_drag_rect = !(abs(mx - drag_start.x) < PREFS.min_select_px && abs(my - drag_start.y) < PREFS.min_select_px);
+        editor_draw_drag_rect = !(fabs(mx - drag_start.x) < PREFS.min_select_px && fabs(my - drag_start.y) < PREFS.min_select_px);
     
 
     switch (event.type) {
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN :
             if (event.button.button == SDL_BUTTON_LEFT) {
                 // if we clicked at all and werent holding ctrl, clear selections
-                if (!(SDL_GetModState() & KMOD_CTRL)) {
+                if (!(SDL_GetModState() & SDL_KMOD_CTRL)) {
                     editor_deselect_all();
                 }
                 
@@ -225,7 +223,7 @@ void editor_selection_handler(SDL_Event event){
                     /*
                         If holding ctrl and the entity we selected is already selected, deselect it
                     */
-                    if(prev_sel && selected && (SDL_GetModState() & KMOD_CTRL)){
+                    if(prev_sel && selected && (SDL_GetModState() & SDL_KMOD_CTRL)){
                         editor_deselect(ent);
                     }
 
@@ -235,7 +233,7 @@ void editor_selection_handler(SDL_Event event){
                 }
             }
             break;
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_UP :
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (is_dragging) {
                     is_dragging = false;
@@ -246,7 +244,7 @@ void editor_selection_handler(SDL_Event event){
                 }
             }
             break;
-        case SDL_MOUSEMOTION:
+        case SDL_EVENT_MOUSE_MOTION :
             if (event.motion.state & SDL_BUTTON_LMASK) {
                 if (!is_dragging) {
                     // Start dragging if not already dragging
@@ -397,7 +395,7 @@ void editor_select(struct ye_entity * ent){
     ye_reset_editor_selection_group();
 
     // check if keyboard is currently pressing ctrl
-    if(!(SDL_GetModState() & KMOD_CTRL)){
+    if(!(SDL_GetModState() & SDL_KMOD_CTRL)){
         editor_deselect_all();
     }
     add_selection(ent);

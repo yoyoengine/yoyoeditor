@@ -10,7 +10,6 @@
 #include "editor_build.h"
 #include "editor_panels.h"
 #include "editor_utils.h"
-#include "editor_fs_ops.h"
 #include <yoyoengine/yoyoengine.h>
 #ifdef __linux__
     #include <unistd.h>
@@ -71,6 +70,24 @@ void editor_reload_build_file(){
     BUILD_FILE = ye_json_read(ye_path("build.yoyo"));
 }
 
+static void SDLCALL editor_engine_selector_dialog_cb(void* userdata, const char* const* filelist, int filter){
+    if(!filelist) {
+        ye_logf(YE_LL_ERROR, "An error occured: %s\n", SDL_GetError());
+        return;
+    }
+    else if (!*filelist) {
+        ye_logf(YE_LL_DEBUG, "No file selected in engine selector dialog.\n");
+        return;
+    }
+
+    ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
+    strncpy(local_engine_path, *filelist, (size_t)sizeof(local_engine_path) - 1);
+    // do not free filelist
+    
+    (void)userdata; // unused
+    (void)filter; // unused
+}
+
 void ye_editor_paint_project_settings(struct nk_context *ctx){
     if (nk_begin(ctx, "Settings", nk_rect(screenWidth/2 - 250, screenHeight/2 - 250, 500, 500),
         NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE)) {
@@ -116,11 +133,18 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                char *new_path = editor_file_dialog_select_resource("*");
-                if(new_path != NULL){
-                    strncpy(project_icon_path, new_path, (size_t)sizeof(project_icon_path) - 1);
-                    free(new_path);
-                }
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_any_filters,
+                        .num_filters = &ye_picker_num_any_filters,
+
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                        .dest.output_buf = {
+                            .buffer = project_icon_path,
+                            .size = sizeof(project_icon_path) - 1,
+                        },
+                    }
+                );
             }
 
             /*
@@ -139,11 +163,18 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                char *new_path = editor_file_dialog_select_resource("*.yoyo");
-                if(new_path != NULL){
-                    strncpy(project_entry_scene, new_path, (size_t)sizeof(project_entry_scene) - 1);
-                    free(new_path);
-                }
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_yoyo_filters,
+                        .num_filters = &ye_picker_num_yoyo_filters,
+
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                        .dest.output_buf = {
+                            .buffer = project_entry_scene,
+                            .size = sizeof(project_entry_scene) - 1,
+                        },
+                    }
+                );
             }
 
             /*
@@ -315,11 +346,18 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_layout_row_push(ctx, 0.05f);
             nk_layout_row_push(ctx, 0.06f);
             if(nk_button_image(ctx, editor_icons.folder)){
-                char *new_path = editor_file_dialog_select_resource("*.rc");
-                if(new_path != NULL){
-                    strncpy(build_rc_path, new_path, (size_t)sizeof(build_rc_path) - 1);
-                    free(new_path);
-                }
+                ye_pick_resource_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_icon_filters,
+                        .num_filters = &ye_picker_num_icon_filters,
+
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                        .dest.output_buf = {
+                            .buffer = build_rc_path,
+                            .size = sizeof(build_rc_path) - 1,
+                        },
+                    }
+                );
             }
 
             /*
@@ -360,11 +398,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 nk_layout_row_push(ctx, 0.05f);
                 nk_layout_row_push(ctx, 0.06f);
                 if(nk_button_image(ctx, editor_icons.folder)){
-                    char *new_path = editor_file_dialog_select_folder();
-                    if(new_path != NULL){
-                        strncpy(local_engine_path, new_path, (size_t)sizeof(local_engine_path) - 1);
-                        free(new_path);
-                    }
+                    SDL_ShowOpenFolderDialog(editor_engine_selector_dialog_cb, NULL, YE_STATE.runtime.window, NULL, false);
                 }
             }
             else {
@@ -403,7 +437,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(SETTINGS, "screen_width", project_screen_size_UNPROCESSED == 0 ? json_integer(1920) : json_integer(2560));
                 json_object_set_new(SETTINGS, "screen_height", project_screen_size_UNPROCESSED == 0 ? json_integer(1080) : json_integer(1440));
                 if (project_window_mode_UNPROCESSED == 2) {
-                    json_object_set_new(SETTINGS, "window_mode", json_integer(SDL_WINDOW_FULLSCREEN_DESKTOP));
+                    json_object_set_new(SETTINGS, "window_mode", json_integer(SDL_WINDOW_FULLSCREEN));
                 } else {
                     json_object_set_new(SETTINGS, "window_mode", project_window_mode_UNPROCESSED == 0 ? json_integer(0) : json_integer(1));
                 }
@@ -606,7 +640,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     if(!ye_json_int(SETTINGS, "window_mode", &project_window_mode_UNPROCESSED)){
                         project_window_mode_UNPROCESSED = 0;
                     }else{
-                        if(project_window_mode_UNPROCESSED == SDL_WINDOW_FULLSCREEN_DESKTOP){
+                        if(project_window_mode_UNPROCESSED == SDL_WINDOW_FULLSCREEN){
                             project_window_mode_UNPROCESSED = 2;
                         }
                     }
@@ -783,21 +817,21 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     unlock_viewport();
                 }
             }
-            if(nk_button_image_label(ctx, editor_icons.trick, "Manage/Install Tricks", NK_TEXT_CENTERED)){
-                /*
-                    Open a popout editor for managing tricks
-                */
-                if(!ui_component_exists("trick panel")){
-                    ui_register_component("trick panel", editor_panel_tricks);
-                    lock_viewport();
-                }// else {
-                //     remove_ui_component("trick panel");
-                //     unlock_viewport();
-                // } this would not clean up memory, so just force closing through the panel for now
-            }
+            // if(nk_button_image_label(ctx, editor_icons.trick, "Manage/Install Tricks", NK_TEXT_CENTERED)){
+            //     /*
+            //         Open a popout editor for managing tricks
+            //     */
+            //     if(!ui_component_exists("trick panel")){
+            //         ui_register_component("trick panel", editor_panel_tricks);
+            //         lock_viewport();
+            //     }// else {
+            //     //     remove_ui_component("trick panel");
+            //     //     unlock_viewport();
+            //     // } this would not clean up memory, so just force closing through the panel for now
+            // }
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label_colored(ctx, "Copyright (c) Ryan Zmuda 2023-2024", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
+            nk_label_colored(ctx, "Copyright (c) Ryan Zmuda 2023-2025", NK_TEXT_CENTERED, nk_rgb(255, 255, 255));
         nk_end(ctx);
     }
 }

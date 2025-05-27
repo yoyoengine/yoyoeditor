@@ -18,19 +18,13 @@
 void editor_open_in_system(const char *url_or_file_path);
 
 /**
- * @brief Touches a file with the given content.
+ * @brief Updates the window title (takes a format string).
  * 
- * @param file_path The path to the file (the folder will be created if it doesn't exist)
- * @param content The content to write to the file, if any
- */
-void editor_touch_file(const char *file_path, const char *content);
-
-/**
- * @brief Checks if a file exists.
+ * @param format The format string for the title
+ * @param ... The arguments for the format string
  * 
- * @param file_path The path to the file
- * @return true if the file exists, false otherwise
+ * @return true if the title was updated successfully, false otherwise
  */
-bool editor_file_exists(const char *file_path);
+bool editor_update_window_title(const char *format, ...);
 
 #endif // EDITOR_UTILS_H

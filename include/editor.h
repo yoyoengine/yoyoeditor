@@ -67,12 +67,14 @@ struct editor_state {
     } mode;
 
     char * opened_project_path;
+    char * opened_project_resources_path;
 
     // build system //
-
     bool is_building;
-    int building_thread;
-    int pipefd[2];
+    SDL_Thread *building_thread;
+    SDL_Mutex *build_mutex;
+    int build_status; // 0 = running, 1 = done, 2 = error
+    char build_status_msg[256];
 
     // game running //
     bool is_running;

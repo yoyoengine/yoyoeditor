@@ -5,10 +5,9 @@
     Licensed under the MIT license. See LICENSE file in the project root for details.
 */
 
-// sucess, this file is now gross and #NOTCROSSPLATFORM
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #ifdef __linux__
     #include <unistd.h>
 #else
@@ -60,19 +59,6 @@ void editor_build_packs(bool force){
     free(resources);
     free(engine_yep);
     free(resources_yep);
-}
-
-// TODO: NOTCROSSPLATFORM
-
-pid_t _configure() {
-    pid_t pid = fork();
-
-    if(pid == 0){
-        execlp("cmake", "..", NULL);
-        exit(0);
-    }
-
-    return pid;
 }
 
 // -u is for unbuffered output btw
@@ -197,77 +183,58 @@ error:
     return NULL;
 }
 
-void editor_run(){
-
-    // TODO: do we want pack rebuild on run only? its pretty cheap if we dont change any files
-    // editor_build_packs(false);
-
-    // create fork for running game
-    // if(EDITOR_STATE.is_running) {
-        // stop the forked proc by pid
-        // kill(EDITOR_STATE.running_thread, SIGKILL);
-        // EDITOR_STATE.is_running = false;
-    // }
-
-    pid_t pid = fork();
-    if(pid == 0){
-        // chdir to build dir
-        chdir(ye_path("build"));
-
-        // run the game
-        execlp("make", "make", "-j8", "run", NULL);
-        exit(0);
-    }
-    // else {
-        // EDITOR_STATE.running_thread = pid;
-        // EDITOR_STATE.is_running = true;
-    // }
-}
-
-// NOTCROSSPLATFORM
-void editor_build(bool force_configure, bool should_run){
-    editor_build_packs(false);    
-
-    EDITOR_STATE.is_building = true;
-
-    if(pipe(EDITOR_STATE.pipefd) == -1){
-        ye_logf(error, "Failed to create pipe for build process.\n");
+void editor_run() {
+    if (!ye_chdir(ye_path("build"))) {
+        ye_logf(error, "Failed to change to build directory.\n");
         return;
     }
 
-    fcntl(EDITOR_STATE.pipefd[0], F_SETFL, O_NONBLOCK);
+    const char *args[] = { "make", "-j8", "run", NULL }; // TODO: fix this (use --parallel and cmake --build)
+
+    SDL_Process *proc = SDL_CreateProcess(args, true);
+    if (!proc) {
+        ye_logf(error, "Failed to spawn game process: %s\n", SDL_GetError());
+        return;
+    }
+
+    // TODO: thread to capture process output
+}
+
+struct build_thread_args {
+    bool should_run;
+    bool force_configure;
+};
+
+static int build_thread_func(void *userdata) {
+    struct build_thread_args *args_struct = (struct build_thread_args *)userdata;
+    bool should_run = args_struct->should_run;
+    bool force_configure = args_struct->force_configure;
+    free(args_struct);
 
     char **args = retrieve_build_args();
     if(args == NULL){
-        ye_logf(error, "Failed to retrieve build args.\n");
-        return;
+        SDL_LockMutex(EDITOR_STATE.build_mutex);
+        EDITOR_STATE.build_status = 2;
+        snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Failed to retrieve build args.");
+        SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+        return 1;
     }
-
-    // print out build args
-    // for(int i = 0; args[i] != NULL; i++){
-        // printf("BUILD ARGS:\n");
-        // printf("\targ %d: %s\n", i, args[i]);
-    // }
 
     json_t *BUILD_FILE = json_load_file(ye_path("build.yoyo"), 0, NULL);
     if (BUILD_FILE == NULL) {
-        ye_logf(error, "Failed to read build file.\n");
-        return;
+        SDL_LockMutex(EDITOR_STATE.build_mutex);
+        EDITOR_STATE.build_status = 2;
+        snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Failed to read build file.");
+        SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+        return 1;
     }
 
     if(force_configure || json_boolean_value(json_object_get(BUILD_FILE, "delete_cache"))) {
-        // absolutely NUKING the cache HELL YEA!!!!
-        char buff[512];
-        snprintf(buff, sizeof(buff), "rm -rf %s", ye_path("build/CMakeCache.txt"));
-        system(buff);
-
-        // set delete_cache to false
+        ye_delete_file(ye_path("build/CMakeCache.txt"));
         json_object_set_new(BUILD_FILE, "delete_cache", json_false());
     }
 
-    // serialize
     json_dump_file(BUILD_FILE, ye_path("build.yoyo"), JSON_INDENT(4));
-
     json_decref(BUILD_FILE);
     BUILD_FILE = NULL;
 
@@ -275,13 +242,9 @@ void editor_build(bool force_configure, bool should_run){
     char invoke[512];
     snprintf(invoke, sizeof(invoke), "cmake ");
     for(int i = 0; args[i] != NULL; i++){
-        // skip empty args
         if(strlen(args[i]) == 0) continue;
-
-        // wrap any multi word args in quotes
         char *equal_sign = strchr(args[i], '=');
         if (equal_sign != NULL && strchr(equal_sign + 1, ' ')) {
-            // Split the argument at the equal sign
             *equal_sign = '\0';
             strcat(invoke, args[i]);
             strcat(invoke, "=");
@@ -292,73 +255,68 @@ void editor_build(bool force_configure, bool should_run){
             strcat(invoke, args[i]);
             strcat(invoke, " ");
         }
-
     }
-    ye_logf(debug, "build cmake invokation: %s\n", invoke);
-    
-    pid_t pid = fork();
-    if(pid == 0){
-        close(EDITOR_STATE.pipefd[0]);
 
-        char status[256];
+    // create build dir (cross-platform)
+    ye_mkdir(ye_path("build"));
+    ye_chdir(ye_path("build"));
 
-        // create build dir (handle gracefully if it already exists)
-        // snprintf(status, sizeof(status), "Creating build directory ...");
-        // write(EDITOR_STATE.pipefd[1], status, strlen(status));
-        // dont send beacuse its so short it messes up loading refresh timing
+    bool cmake_cache_exists = ye_file_exists(ye_path("build/CMakeCache.txt"));
 
-        // create ye_path("build") directory
-        mkdir(ye_path("build"), 0777);
-
-        // chdir to ye_path("build")
-        chdir(ye_path("build"));
-
-        // printf("%s\n", ye_path("build"));
-        // printf("%s\n", ye_path("build/CMakeCache.txt"));
-
-        // if CMakeCache.txt exists, we are going to skip running cmake explicitly
-        if(force_configure || access(ye_path("build/CMakeCache.txt"), F_OK) == -1){
-            // run cmake
-            snprintf(status, sizeof(status), "Running CMake ...");
-            write(EDITOR_STATE.pipefd[1], status, strlen(status));
-
-            if(system(invoke) != 0){
-                snprintf(status, sizeof(status), "error");
-                write(EDITOR_STATE.pipefd[1], status, strlen(status));
-                exit(0);
-            }
+    // CMake step
+    if (force_configure || !cmake_cache_exists) {
+        SDL_LockMutex(EDITOR_STATE.build_mutex);
+        snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Running CMake ...");
+        SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+        if(system(invoke) != 0){
+            SDL_LockMutex(EDITOR_STATE.build_mutex);
+            EDITOR_STATE.build_status = 2;
+            snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "error");
+            SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+            return 1;
         }
-
-        // run make
-        snprintf(status, sizeof(status), "Running Make ...");
-        write(EDITOR_STATE.pipefd[1], status, strlen(status));
-
-        if(system("make -j8") != 0){
-            snprintf(status, sizeof(status), "error");
-            write(EDITOR_STATE.pipefd[1], status, strlen(status));
-            exit(0);
-        }
-
-        snprintf(status, sizeof(status), "done");
-        write(EDITOR_STATE.pipefd[1], status, strlen(status));
-
-        close(EDITOR_STATE.pipefd[1]);
-
-        // cleanup arg memory
-        for(int i = 0; args[i] != NULL; i++){
-            free(args[i]);
-            args[i] = NULL; // Avoid dangling pointer
-        }
-
-        if(should_run){
-            editor_run();
-        }
-
-        exit(0);
-    } else {
-        EDITOR_STATE.building_thread = pid;
-        EDITOR_STATE.is_building = true;
     }
+
+    // Make step
+    SDL_LockMutex(EDITOR_STATE.build_mutex);
+    snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Running Make ...");
+    SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+    if(system("make -j8") != 0){
+        SDL_LockMutex(EDITOR_STATE.build_mutex);
+        EDITOR_STATE.build_status = 2;
+        snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "error");
+        SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+        return 1;
+    }
+
+    SDL_LockMutex(EDITOR_STATE.build_mutex);
+    EDITOR_STATE.build_status = 1;
+    snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "done");
+    SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+
+    // cleanup arg memory
+    for(int i = 0; args[i] != NULL; i++){
+        free(args[i]);
+    }
+    free(args);
+
+    if(should_run){
+        editor_run();
+    }
+    return 0;
+}
+
+void editor_build(bool force_configure, bool should_run){
+    editor_build_packs(false);
+    EDITOR_STATE.is_building = true;
+    EDITOR_STATE.build_status = 0;
+    SDL_LockMutex(EDITOR_STATE.build_mutex);
+    snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Starting build ...");
+    SDL_UnlockMutex(EDITOR_STATE.build_mutex);
+    struct build_thread_args *args_struct = malloc(sizeof(struct build_thread_args));
+    args_struct->should_run = should_run;
+    args_struct->force_configure = force_configure;
+    EDITOR_STATE.building_thread = SDL_CreateThread(build_thread_func, "BuildThread", args_struct);
 }
 
 void editor_build_and_run(){
@@ -366,7 +324,7 @@ void editor_build_and_run(){
 }
 
 void editor_build_reconfigure(){
-
     editor_build(true, false);
-
 }
+
+// TODO: make a pretty progess bar
