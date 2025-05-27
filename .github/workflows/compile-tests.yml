@@ -15,15 +15,10 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: sudo apt update && sudo apt-get install -y gcc cmake make
+        run: sudo apt update && sudo apt-get install -y gcc cmake make libdrm-dev libgbm-dev libfreetype6-dev libharfbuzz-dev nasm
 
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libdrm-dev libgbm-dev libfreetype6-dev libharfbuzz-dev nasm
 
       - name: Cache Fetchcontent
         id: cache-fetchcontent
