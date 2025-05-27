@@ -23,7 +23,7 @@ void editor_panel_credits(struct nk_context *ctx);
 
 void editor_panel_styles(struct nk_context *ctx);
 
-void editor_panel_tricks(struct nk_context *ctx);
+// void editor_panel_tricks(struct nk_context *ctx);
 
 extern char editor_loading_buffer[100];
 void editor_panel_loading(struct nk_context *ctx);
