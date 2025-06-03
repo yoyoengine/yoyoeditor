@@ -16,7 +16,7 @@ fi
 # Check if CMakeCache.txt exists or if reconfigure is forced
 if [ ! -f "CMakeCache.txt" ]; then
     echo "Running cmake..."
-    cmake -DCMAKE_BUILD_TYPE=Debug -DZOOGIES_DEVELOPMENT_BUILD=TRUE -DYOYO_ENGINE_PATH=$ENGINE_PATH ..
+    cmake -DCMAKE_BUILD_TYPE=Debug -DYOYO_ENGINE_PATH=$ENGINE_PATH ..
     if [ $? -eq 0 ]; then
         echo "cmake configuration succeeded."
     else

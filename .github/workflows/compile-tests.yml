@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/build
           cd ${{ github.workspace }}/build
-          CC=${{ matrix.compiler }} cmake -DBUILD_LUA_RUNTIME=OFF -DSDL_UNIX_CONSOLE_BUILD=ON -DZOOGIES_DEVELOPMENT_BUILD=TRUE ..
+          CC=${{ matrix.compiler }} cmake -DBUILD_LUA_RUNTIME=OFF -DSDL_UNIX_CONSOLE_BUILD=ON ..
       
       - name: Build with ${{ matrix.compiler }}
         run: |
