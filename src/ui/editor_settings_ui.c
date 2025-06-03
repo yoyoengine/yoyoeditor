@@ -368,7 +368,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_label(ctx, "Build Mode:", NK_TEXT_LEFT);
             if (nk_input_is_mouse_hovering_rect(in, bounds))
                 nk_tooltip(ctx, "The mode you are building for.");
-            static const char *build_modes[] = {"debug", "release"};
+            static const char *build_modes[] = {"Debug", "Release"};
             nk_combobox(ctx, build_modes, NK_LEN(build_modes), &build_mode_int, 25, nk_vec2(200,200));
 
             /*

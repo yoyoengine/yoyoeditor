@@ -27,7 +27,7 @@ fi
 
 # Run make
 echo "Running make with -j$(nproc)..."
-make -j$(nproc)
+cmake --build . --parallel
 if [ $? -eq 0 ]; then
     echo "make build succeeded."
 else

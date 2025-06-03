@@ -71,7 +71,7 @@ void editor_build_packs(bool force){
 // -DGAME_RC_PATH
 // -DCMAKE_C_FLAGS
 // -DYOYO_ENGINE_SOURCE_DIR
-// -DYOYO_ENGINE_BUILD_RELEASE  - NOT IMPLEMENTED
+// -DCMAKE_BUILD_TYPE           - "Debug" | "Release"
 // -DGAME_BUILD_DESTINATION     - NOT IMPLEMENTED
 // -DCMAKE_TOOLCHAIN_FILE
 char **retrieve_build_args() {
@@ -105,8 +105,9 @@ char **retrieve_build_args() {
     const char *core_tag = json_string_value(json_object_get(BUILD_FILE, "core_tag"));
     bool use_local_engine = json_boolean_value(json_object_get(BUILD_FILE, "use_local_engine"));
     const char *local_engine_path = json_string_value(json_object_get(BUILD_FILE, "local_engine_path"));
+    const char *build_mode = json_string_value(json_object_get(BUILD_FILE, "build_mode"));
 
-    if (!game_name || !game_rc_path || !cflags || !platform || !core_tag || !local_engine_path) {
+    if (!game_name || !game_rc_path || !cflags || !platform || !core_tag || !local_engine_path || !build_mode) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
         goto error;
     }
@@ -133,8 +134,13 @@ char **retrieve_build_args() {
     else {
         args[3] = malloc(strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
     }
-    args[4] = malloc(1); // Placeholder for future use
+    
+    // CMake build mode use string from json
+    args[4] = malloc(strlen(build_mode) + strlen("-DCMAKE_BUILD_TYPE=") + 1);
+    snprintf(args[4], strlen(build_mode) + strlen("-DCMAKE_BUILD_TYPE=") + 1, "-DCMAKE_BUILD_TYPE=%s", build_mode);
+    
     args[5] = malloc(1); // Placeholder for future use
+
     args[6] = malloc(strlen(EDITOR_STATE.opened_project_path) + strlen("toolchains/") + strlen("-DCMAKE_TOOLCHAIN_FILE=") + 256);
 
     if (!args[0] || !args[1] || !args[2] || !args[3] || !args[4] || !args[5] || !args[6]) {
@@ -158,7 +164,6 @@ char **retrieve_build_args() {
     else {
         snprintf(args[3], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
     }
-    args[4][0] = '\0';
     args[5][0] = '\0';
 
     if (strcmp(platform, "windows") != 0 && strcmp(platform, "emscripten") != 0) {
@@ -193,7 +198,7 @@ void editor_run() {
         return;
     }
 
-    const char *args[] = { "make", "-j8", "run", NULL }; // TODO: fix this (use --parallel and cmake --build)
+    const char *args[] = { "cmake", "--build", ".", "--parallel", "--target", "run", NULL }; // TODO: config=??
 
     SDL_Process *proc = SDL_CreateProcess(args, true);
     if (!proc) {
