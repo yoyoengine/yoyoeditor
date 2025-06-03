@@ -37,4 +37,4 @@ fi
 
 # Run the editor
 echo "Running the editor..."
-./bin/Linux/yoyoeditor
+./Debug/yoyoeditor

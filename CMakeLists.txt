@@ -32,12 +32,13 @@ file(GLOB_RECURSE SOURCES CMAKE_CONFIGURE_DEPENDS "src/*.c")
 
 # Define the output executable name and directory
 set(EXECUTABLE_NAME yoyoeditor)
-set(EDITOR_BUILD_DIR "${CMAKE_BINARY_DIR}/bin/${CMAKE_SYSTEM_NAME}")
+set(EDITOR_BUILD_DIR "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 # set rpath for Linux (will allow the game to find the engine shared library on every system)
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-SET(CMAKE_INSTALL_RPATH $ORIGIN/lib)
+SET(CMAKE_INSTALL_RPATH $ORIGIN)
+# SET(CMAKE_INSTALL_RPATH $ORIGIN/lib)
 # note: if you check ldd, it will still show absolute!!
 #       Use chrpath to see the real rpath.
     
@@ -137,11 +138,11 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 add_custom_command(
     TARGET ${EXECUTABLE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/settings.yoyo" "${EDITOR_BUILD_DIR}/settings.yoyo"
+        "${CMAKE_SOURCE_DIR}/settings.yoyo" "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/settings.yoyo"
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/editor.yoyo" "${EDITOR_BUILD_DIR}/editor.yoyo"
+        "${CMAKE_SOURCE_DIR}/editor.yoyo" "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/editor.yoyo"
     COMMAND ${CMAKE_COMMAND} -E make_directory
-        "${EDITOR_BUILD_DIR}/resources"
+        "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/resources"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/editor_resources" "${EDITOR_BUILD_DIR}/editor_resources"
+        "${CMAKE_SOURCE_DIR}/editor_resources" "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/editor_resources"
 )
