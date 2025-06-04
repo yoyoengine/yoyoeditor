@@ -35,9 +35,9 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/build
           cd ${{ github.workspace }}/build
-          CC=${{ matrix.compiler }} cmake -DBUILD_LUA_RUNTIME=OFF -DSDL_UNIX_CONSOLE_BUILD=ON ..
+          CC=${{ matrix.compiler }} cmake -DCMAKE_BUILD_TYPE=Debug -DSDL_UNIX_CONSOLE_BUILD=ON ..
       
       - name: Build with ${{ matrix.compiler }}
         run: |
           cd ${{ github.workspace }}/build
-          make -j$(nproc)
+          cmake --build . --parallel
