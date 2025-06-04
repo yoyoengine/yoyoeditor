@@ -31,6 +31,8 @@ endif()
 # Define the source files for your project
 file(GLOB_RECURSE SOURCES CMAKE_CONFIGURE_DEPENDS "src/*.c")
 
+set(YOYO_ENGINE_COPY_ENGINE_RESOURCES ON CACHE BOOL "Copy engine resources to the game build directory")
+
 # Define the output executable name and directory
 set(EXECUTABLE_NAME yoyoeditor)
 set(EDITOR_BUILD_DIR "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
