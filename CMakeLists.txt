@@ -48,8 +48,8 @@ add_executable(${EXECUTABLE_NAME} ${SOURCES})
     
 # we take in ZOOGIES_DEVELOPMENT_BUILD if we are
 # building locally outside of a normal release cycle
-if(ZOOGIES_DEVELOPMENT_BUILD)
-    add_compile_definitions(ZOOGIES_DEVELOPMENT_BUILD)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug") # FIXME: is this what we really want?
+    # add_compile_definitions(ZOOGIES_DEVELOPMENT_BUILD) FIXME: redundant i think
 
     # this will only matter if we dont also pass YOYO_ENGINE_PATH,
     # but that would be highly abnormal for a dev build since usually
