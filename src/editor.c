@@ -189,7 +189,7 @@ void editor_welcome_loop() {
     
     editor_init_panel_welcome();
 
-    ui_register_component("welcome", editor_panel_welcome);
+    ui_register_component("welcome", (void (*)(void)) editor_panel_welcome);
 
     editor_update_window_title("Yoyo Engine Editor - Home");
 
@@ -244,11 +244,11 @@ void editor_editing_loop() {
     }
 
     // register all editor ui components
-    ui_register_component("heiarchy", ye_editor_paint_hiearchy);
-    ui_register_component("entity", ye_editor_paint_inspector);
-    ui_register_component("options", ye_editor_paint_options);
-    ui_register_component("project", ye_editor_paint_project);
-    ui_register_component("editor_menu_bar", ye_editor_paint_menu);
+    ui_register_component("heiarchy", (void (*)(void)) ye_editor_paint_hiearchy);
+    ui_register_component("entity", (void (*)(void)) ye_editor_paint_inspector);
+    ui_register_component("options", (void (*)(void)) ye_editor_paint_options);
+    ui_register_component("project", (void (*)(void)) ye_editor_paint_project);
+    ui_register_component("editor_menu_bar", (void (*)(void)) ye_editor_paint_menu);
 
     origin = get_ent_by_name_silent("origin");
     if(!origin){

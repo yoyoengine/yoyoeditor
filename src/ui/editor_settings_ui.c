@@ -546,7 +546,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     editor_reload_build_file();
                     project_settings_open = true;
                     lock_viewport_interaction = true;
-                    ui_register_component("project settings",ye_editor_paint_project_settings);
+                    ui_register_component("project settings",(void (*)(void)) ye_editor_paint_project_settings);
                     // ye_json_log(SETTINGS);
                     // setup a bunch of stack variables for showing current settings
                     
@@ -810,7 +810,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     Open a popout editor for the editor styles
                 */
                 if(!ui_component_exists("editor styles")){
-                    ui_register_component("editor styles", editor_panel_styles);
+                    ui_register_component("editor styles", (void (*)(void)) editor_panel_styles);
                     lock_viewport();
                 } else {
                     remove_ui_component("editor styles");

@@ -265,7 +265,7 @@ void ye_editor_paint_options(struct nk_context *ctx){
             nk_layout_row_dynamic(ctx, 25, 4);
             if(nk_checkbox_label(ctx, "Debug", (nk_bool*)&show_debug_overlay)){
                 if(show_debug_overlay){
-                    ui_register_component("debug",ui_paint_debug_overlay);
+                    ui_register_component("debug",(void (*)(void)) ui_paint_debug_overlay);
                 }
                 else{
                     remove_ui_component("debug");
@@ -273,7 +273,7 @@ void ye_editor_paint_options(struct nk_context *ctx){
             }
             if(nk_checkbox_label(ctx, "Info", (nk_bool*)&show_info_overlay)){
                 if(show_info_overlay){
-                    ui_register_component("info_overlay",ye_editor_paint_info_overlay);
+                    ui_register_component("info_overlay", (void (*)(void)) ye_editor_paint_info_overlay);
                 }
                 else{
                     remove_ui_component("info_overlay");
@@ -281,7 +281,7 @@ void ye_editor_paint_options(struct nk_context *ctx){
             }
             if(nk_checkbox_label(ctx, "Camera", (nk_bool*)&show_camera_overlay)){
                 if(show_camera_overlay){
-                    ui_register_component("cam_info",ui_paint_cam_info);
+                    ui_register_component("cam_info", (void (*)(void)) ui_paint_cam_info);
                 }
                 else{
                     remove_ui_component("cam_info");
@@ -650,7 +650,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
 
             if(nk_menu_item_label(ctx, "Scene Settings", NK_TEXT_LEFT)){
                 if(!ui_component_exists("scene_settings")){
-                    ui_register_component("scene_settings", editor_panel_scene_settings);
+                    ui_register_component("scene_settings", (void (*)(void)) editor_panel_scene_settings);
                     lock_viewport();
                 }
                 else{
@@ -666,7 +666,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
             nk_layout_row_dynamic(ctx, 25, 1);
             if(nk_menu_item_label(ctx, "Editor Settings", NK_TEXT_LEFT)){
                 if(!ui_component_exists("editor_settings")){
-                    ui_register_component("editor_settings", ye_editor_paint_editor_settings);
+                    ui_register_component("editor_settings", (void (*)(void)) ye_editor_paint_editor_settings);
                 }
                 else{
                     remove_ui_component("editor_settings");
@@ -681,7 +681,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Shortcuts", NK_TEXT_LEFT)) {
                 if(!ui_component_exists("editor keybinds")){
-                    ui_register_component("editor keybinds", editor_panel_keybinds);
+                    ui_register_component("editor keybinds", (void (*)(void)) editor_panel_keybinds);
                     lock_viewport();
                 } else {
                     remove_ui_component("editor keybinds");
@@ -696,7 +696,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
             }
             if(nk_menu_item_label(ctx, "Credits", NK_TEXT_LEFT)) {
                 if(!ui_component_exists("credits")){
-                    ui_register_component("editor_credits", editor_panel_credits);
+                    ui_register_component("editor_credits", (void (*)(void)) editor_panel_credits);
                     lock_viewport();
                 } else {
                     remove_ui_component("editor_credits");
