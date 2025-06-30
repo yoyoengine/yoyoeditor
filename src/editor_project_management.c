@@ -66,6 +66,58 @@ void editor_create_new_project(const char *target_dir) {
 
         ye_logf(info, "Successfully created project at %s\n", target_dir);
 
+    #elif defined(_WIN32) || defined(_WIN64)
+
+        // create path\to\proj\proj_name (aka target_dir)
+        if (!ye_mkdir(target_dir)) {
+            ye_logf(error, "Failed to create project at %s\n", target_dir);
+            return;
+        }
+
+        // the tag we want to pull from
+        char desired_tag[64];
+
+        // in dev, clone main
+        #ifdef ZOOGIES_DEVELOPMENT_BUILD
+            strncpy(desired_tag, "main", sizeof(desired_tag));
+            printf("Using main branch for development build.\n");
+        #else
+            strncpy(desired_tag, YOYO_ENGINE_VERSION_STRING, sizeof(desired_tag));
+            ye_version_tagify(desired_tag);
+            printf("Using version tag: %s\n", desired_tag);
+        #endif
+
+        // git clone with depth 1
+        char git_clone_cmd[512];
+        snprintf(git_clone_cmd, sizeof(git_clone_cmd), "git clone --depth 1 --branch %s https://github.com/yoyoengine/template.git \"%s\"", desired_tag, target_dir);
+        ye_logf(YE_LL_INFO, "Running command: %s\n", git_clone_cmd);
+        if (system(git_clone_cmd) != 0) {
+            ye_logf(error, "Failed to clone template repository into %s\n", target_dir);
+            return;
+        }
+
+        // Remove the .git directory to clean up
+        char git_remove_git_dir_cmd[512];
+        snprintf(git_remove_git_dir_cmd, sizeof(git_remove_git_dir_cmd), "rmdir /s /q \"%s\\.git\"", target_dir);
+        if (system(git_remove_git_dir_cmd) != 0) {
+            ye_logf(error, "Failed to remove .git directory in %s\n", target_dir);
+            return;
+        }
+
+        // Initialize a new git repository
+        char git_init_cmd[512];
+        snprintf(git_init_cmd, sizeof(git_init_cmd), "cd \"%s\" && git init", target_dir);
+        if (system(git_init_cmd) != 0) {
+            ye_logf(error, "Failed to initialize a new git repository in %s\n", target_dir);
+            return;
+        }
+
+        // build the initial packs
+        //ye_update_base_path(target_dir);
+        //editor_build_packs(true);
+
+        ye_logf(info, "Successfully created project at %s\n", target_dir);
+
     #else
         ye_logf(error, "Unsupported platform for creating new projects!\n");
     #endif

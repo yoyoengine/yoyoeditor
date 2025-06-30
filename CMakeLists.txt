@@ -11,6 +11,13 @@ project(YoyoEditor)
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
 
+# ZOOGIES_DEVELOPMENT_BUILD controls some macros
+# in the editor that help us use latest versions of things not yet ready for prod
+option(ZOOGIES_DEVELOPMENT_BUILD "" OFF)
+if(ZOOGIES_DEVELOPMENT_BUILD)
+    add_compile_definitions(ZOOGIES_DEVELOPMENT_BUILD)
+endif()
+
 # set YOYO_CMAKE_COPY_ENGINE_RESOURCES to true/on since editor needs the engine resources loose folder
 set(YOYO_CMAKE_COPY_ENGINE_RESOURCES true CACHE BOOL "Copy the engine resources to the editor build directory")
 
@@ -26,6 +33,11 @@ if(UNIX)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -g")
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+endif()
+
+# on windows, dont treat warnings as errors
+if(MSVC)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX-")
 endif()
 
 # Define the source files for your project
@@ -115,6 +127,8 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/includ
 ###############
 #   libcurl   #
 ###############
+
+set(CURL_USE_SCHANNEL ON)
 
 set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
 set(CURL_STATICLIB ON CACHE BOOL "" FORCE)
