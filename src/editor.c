@@ -45,8 +45,9 @@ bool unsaved;
 bool saving; // in the process of saving
 bool quit;
 bool lock_viewport_interaction;
-struct ye_entity *editor_camera;
-struct ye_entity *origin;
+
+struct ye_entity *editor_camera = NULL;
+struct ye_entity *origin = NULL;
 
 // this is so yucky to have this as a global, refactor TODO
 float screenWidth;
@@ -74,6 +75,30 @@ bool editor_panning = false;
 struct edicons editor_icons;
 
 char *editor_base_path = NULL;
+
+/*
+    ECS HELPERS
+*/
+void editor_find_or_create_entities(void) {
+    editor_camera = ye_get_entity_by_name("editor_camera");
+    if (!editor_camera) {
+		editor_camera = ye_create_entity_named("editor_camera");
+		ye_add_transform_component(editor_camera, 0, 0);
+		ye_add_camera_component(editor_camera, 999, (struct ye_rectf){0, 0, 2560, 1440});
+		ye_set_camera(editor_camera);
+	}
+
+    origin = ye_get_entity_by_name("origin");
+	if (!origin) {
+		origin = ye_create_entity_named("origin");
+		ye_add_transform_component(origin, -50, -50);
+
+		SDL_Texture *orgn_tex = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, yep_engine_resource_image("originwhite.png"));
+		ye_cache_texture_manual(orgn_tex, "originwhite.png");
+		ye_add_image_renderer_component_preloaded(origin, 0, orgn_tex);
+		origin->renderer->rect = (struct ye_rectf){0, 0, 100, 100};
+	}
+}
 
 /*
     ALL GLOBALS INITIALIZED
@@ -111,13 +136,14 @@ void editor_reload_settings(){
 void editor_load_scene(char * path){
     editor_deselect_all();
     ye_load_scene(path);
+    editor_find_or_create_entities();
     editor_re_attach_ecs();
+    YE_STATE.engine.target_camera = editor_camera;
 }
 
 void editor_re_attach_ecs(){
     entity_list_head = ye_get_entity_list_head();
-    editor_camera = ye_get_entity_by_name("editor_camera");
-    origin = ye_get_entity_by_name("origin");
+    editor_find_or_create_entities();
     ye_logf(info, "Re-attatched ECS component pointers.\n");
 }
 
@@ -302,6 +328,8 @@ void editor_editing_loop() {
 
     // TODO: remove in future when we serialize editor prefs
     YE_STATE.editor.editor_display_viewport_lines = true;
+
+    editor_find_or_create_entities();
 
     ye_logf(info, "Editor fully initialized.\n");
     ye_logf(info, "---------- BEGIN RUNTIME OUTPUT ----------\n");
