@@ -109,6 +109,14 @@ char **retrieve_build_args() {
 
     if (!game_name || !game_rc_path || !cflags || !platform || !core_tag || !local_engine_path || !build_mode) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
+        // log all recieved/not received values
+        if (!game_name) ye_logf(error, "game_name is NULL\n");
+        if (!game_rc_path) ye_logf(error, "game_rc_path is NULL\n");
+        if (!cflags) ye_logf(error, "cflags is NULL\n");
+        if (!platform) ye_logf(error, "platform is NULL\n");
+        if (!core_tag) ye_logf(error, "core_tag is NULL\n");
+        if (!local_engine_path) ye_logf(error, "local_engine_path is NULL\n");
+        if (!build_mode) ye_logf(error, "build_mode is NULL\n");
         goto error;
     }
 
