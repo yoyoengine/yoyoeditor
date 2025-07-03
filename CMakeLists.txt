@@ -128,7 +128,9 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/includ
 #   libcurl   #
 ###############
 
-set(CURL_USE_SCHANNEL ON)
+if(WIN32)
+    set(CURL_USE_SCHANNEL ON)
+endif()
 
 set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
 set(CURL_STATICLIB ON CACHE BOOL "" FORCE)
