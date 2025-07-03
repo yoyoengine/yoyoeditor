@@ -77,30 +77,6 @@ struct edicons editor_icons;
 char *editor_base_path = NULL;
 
 /*
-    ECS HELPERS
-*/
-void editor_find_or_create_entities(void) {
-    editor_camera = ye_get_entity_by_name("editor_camera");
-    if (!editor_camera) {
-		editor_camera = ye_create_entity_named("editor_camera");
-		ye_add_transform_component(editor_camera, 0, 0);
-		ye_add_camera_component(editor_camera, 999, (struct ye_rectf){0, 0, 2560, 1440});
-		ye_set_camera(editor_camera);
-	}
-
-    origin = ye_get_entity_by_name("origin");
-	if (!origin) {
-		origin = ye_create_entity_named("origin");
-		ye_add_transform_component(origin, -50, -50);
-
-		SDL_Texture *orgn_tex = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, yep_engine_resource_image("originwhite.png"));
-		ye_cache_texture_manual(orgn_tex, "originwhite.png");
-		ye_add_image_renderer_component_preloaded(origin, 0, orgn_tex);
-		origin->renderer->rect = (struct ye_rectf){0, 0, 100, 100};
-	}
-}
-
-/*
     ALL GLOBALS INITIALIZED
 */
 
@@ -133,17 +109,55 @@ void editor_reload_settings(){
     SETTINGS = ye_json_read(ye_path("settings.yoyo"));
 }
 
+// TODO: dumb hack to supress error from this function. sue me.
+struct ye_entity * get_ent_by_name_silent(const char *name) {
+    struct ye_entity_node *current = entity_list_head;
+
+    while(current != NULL){
+        if(strcmp(current->entity->name, name) == 0){
+            return current->entity;
+        }
+        current = current->next;
+    }
+
+    return NULL;
+}
+
+void editor_ensure_camera_exists() {
+    editor_camera = get_ent_by_name_silent("editor_camera");
+    if (!editor_camera) {
+        editor_camera = ye_create_entity_named("editor_camera");
+        ye_add_transform_component(editor_camera, 0, 0);
+        ye_add_camera_component(editor_camera, 999, (struct ye_rectf){0, 0, 2560, 1440});
+        ye_set_camera(editor_camera);
+        ye_logf(YE_LL_INFO, "Created editor camera entity.\n");
+        YE_STATE.engine.target_camera = editor_camera;
+        ye_logf(YE_LL_DEBUG, "Recreated Editor Camera.\n");
+    }
+}
+
+void editor_ensure_origin_exists() {
+    origin = get_ent_by_name_silent("origin");
+    if (!origin) {
+        origin = ye_create_entity_named("origin");
+        ye_add_transform_component(origin, -50, -50);
+
+        SDL_Texture *orgn_tex = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, yep_engine_resource_image("originwhite.png"));
+        ye_cache_texture_manual(orgn_tex, "originwhite.png");
+        ye_add_image_renderer_component_preloaded(origin, 0, orgn_tex);
+        origin->renderer->rect = (struct ye_rectf){0, 0, 100, 100};
+        ye_logf(YE_LL_DEBUG, "Recreated Editor Origin Entity.\n");
+    }
+}
+
+// the editor itself is triggering a scene load
 void editor_load_scene(char * path){
     editor_deselect_all();
     ye_load_scene(path);
-    editor_find_or_create_entities();
-    editor_re_attach_ecs();
-    YE_STATE.engine.target_camera = editor_camera;
 }
 
 void editor_re_attach_ecs(){
     entity_list_head = ye_get_entity_list_head();
-    editor_find_or_create_entities();
     ye_logf(info, "Re-attatched ECS component pointers.\n");
 }
 
@@ -199,14 +213,18 @@ void editor_pre_handle_input(SDL_Event event){
     }
 }
 
+// the editor is recieving info that the engine loaded a scene
+void editor_scene_load_cb(const char *scene_name) {
+    (void)scene_name;
+
+    editor_ensure_camera_exists();
+    editor_ensure_origin_exists();
+}
+
 void editor_welcome_loop() {
     yoyo_loading_refresh("Loading welcome panel...");
 
-    // create camera so engine doesn't freakout
-    struct ye_entity * cam = ye_create_entity_named("project select cam");
-    ye_add_transform_component(cam, 0, 0);
-    ye_add_camera_component(cam, 999, (struct ye_rectf){0, 0, 2560, 1440});
-    ye_set_camera(cam);
+    editor_ensure_camera_exists();
 
     ye_register_event_cb(YE_EVENT_HANDLE_INPUT, editor_pre_handle_input, YE_EVENT_FLAG_PERSISTENT);
 
@@ -228,25 +246,7 @@ void editor_welcome_loop() {
 
     remove_ui_component("welcome");
 
-    ye_destroy_entity(cam);
-    editor_camera = NULL;
-    YE_STATE.engine.target_camera = NULL;
-
     ye_unregister_event_cb(editor_pre_handle_input);
-}
-
-// TODO: dumb hack to supress error from this function. sue me.
-struct ye_entity * get_ent_by_name_silent(const char *name) {
-    struct ye_entity_node *current = entity_list_head;
-
-    while(current != NULL){
-        if(strcmp(current->entity->name, name) == 0){
-            return current->entity;
-        }
-        current = current->next;
-    }
-
-    return NULL;
 }
 
 void editor_editing_loop() {
@@ -260,14 +260,7 @@ void editor_editing_loop() {
     // let the engine know we also want to custom handle inputs
     ye_register_event_cb(YE_EVENT_HANDLE_INPUT, editor_handle_input, YE_EVENT_FLAG_PERSISTENT);
 
-    editor_camera = get_ent_by_name_silent("editor_camera");
-    if(!editor_camera){ // we hit this because purge ecs recreates editor ents for us
-        // create our editor camera and register it with the engine
-        editor_camera = ye_create_entity_named("editor_camera");
-        ye_add_transform_component(editor_camera, 0, 0);
-        ye_add_camera_component(editor_camera, 999, (struct ye_rectf){0, 0, 2560, 1440});
-        ye_set_camera(editor_camera);
-    }
+    editor_ensure_camera_exists();
 
     // register all editor ui components
     ui_register_component("heiarchy", ye_editor_paint_hiearchy);
@@ -275,17 +268,6 @@ void editor_editing_loop() {
     ui_register_component("options", ye_editor_paint_options);
     ui_register_component("project", ye_editor_paint_project);
     ui_register_component("editor_menu_bar", ye_editor_paint_menu);
-
-    origin = get_ent_by_name_silent("origin");
-    if(!origin){
-        origin = ye_create_entity_named("origin");
-        ye_add_transform_component(origin, -50, -50);
-
-        SDL_Texture *orgn_tex = SDL_CreateTextureFromSurface(YE_STATE.runtime.renderer, yep_engine_resource_image("originwhite.png"));
-        ye_cache_texture_manual(orgn_tex, "originwhite.png");
-        ye_add_image_renderer_component_preloaded(origin, 0, orgn_tex);
-        origin->renderer->rect = (struct ye_rectf){0, 0, 100, 100};
-    }
 
     yoyo_loading_refresh("Loading entry scene...");
 
@@ -328,8 +310,6 @@ void editor_editing_loop() {
 
     // TODO: remove in future when we serialize editor prefs
     YE_STATE.editor.editor_display_viewport_lines = true;
-
-    editor_find_or_create_entities();
 
     ye_logf(info, "Editor fully initialized.\n");
     ye_logf(info, "---------- BEGIN RUNTIME OUTPUT ----------\n");
@@ -545,6 +525,8 @@ int main(int argc, char **argv) {
 
     // initialize SDL build mutex for cross-platform build thread sync
     EDITOR_STATE.build_mutex = SDL_CreateMutex();
+
+    ye_register_event_cb(YE_EVENT_SCENE_LOAD, editor_scene_load_cb, YE_EVENT_FLAG_PERSISTENT);
 
     // core editor loop, depending on state
     while(!quit) {

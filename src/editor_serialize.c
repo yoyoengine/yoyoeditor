@@ -382,7 +382,7 @@ void editor_write_scene_to_disk(const char *path){
 
     // lets traverse the entity list and write each entity to the json_t array
     struct ye_entity_node *node = entity_list_head;
-    while(node->next != NULL){
+    while(node != NULL){
         struct ye_entity *entity = node->entity;
 
         // make sure we exclude editor objects
@@ -390,7 +390,6 @@ void editor_write_scene_to_disk(const char *path){
             node = node->next;
             continue;
         }
-
 
         json_t *entity_json = json_object();
 
