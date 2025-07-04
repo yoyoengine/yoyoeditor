@@ -221,9 +221,10 @@ void serialize_entity_rigidbody(struct ye_entity *entity, json_t *entity_json){
     json_object_set_new(p2d_object, "vx", json_real(entity->rigidbody->p2d_object.vx));
     json_object_set_new(p2d_object, "vy", json_real(entity->rigidbody->p2d_object.vy));
     json_object_set_new(p2d_object, "vr", json_real(entity->rigidbody->p2d_object.vr));
-    json_object_set_new(p2d_object, "mass", json_real(entity->rigidbody->p2d_object.mass));
+    json_object_set_new(p2d_object, "density", json_real(entity->rigidbody->p2d_object.density));
     json_object_set_new(p2d_object, "restitution", json_real(entity->rigidbody->p2d_object.restitution));
-    
+    json_object_set_new(p2d_object, "mask", json_integer(entity->rigidbody->p2d_object.mask));
+
     switch(entity->rigidbody->p2d_object.type) {
         case P2D_OBJECT_RECTANGLE:
             json_object_set_new(p2d_object, "width", json_real(entity->rigidbody->p2d_object.rectangle.width));

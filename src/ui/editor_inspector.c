@@ -679,7 +679,7 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
                     // nk_tooltip(ctx, "Will be uncollidable, but emit events when collided with");
 
                 nk_layout_row_dynamic(ctx, 25, 2);
-                nk_property_float(ctx, "#mass", 0.0000001, &ent->rigidbody->p2d_object.mass, 1000000, 1, 5);
+                nk_property_float(ctx, "#density", P2D_MIN_DENSITY, &ent->rigidbody->p2d_object.density, P2D_MAX_DENSITY, 1, 5);
                 nk_property_float(ctx, "#restitution", 0.0000001, &ent->rigidbody->p2d_object.restitution, 1, 0.01, 0.01);
 
                 nk_layout_row_dynamic(ctx, 25, 1);
@@ -729,6 +729,41 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
                 }
 
 
+                nk_tree_pop(ctx);
+            }
+
+            // 4x4 grid of selectable labels for collision layers
+            
+            // new tree collapsable section for collision layers
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if(nk_tree_push(ctx, NK_TREE_TAB, "Collision Layers", NK_MAXIMIZED)){
+
+                nk_label(ctx, "Collision Layers:", NK_TEXT_LEFT);
+                nk_layout_row_static(ctx, 25, 100, 4);
+                static const char *ye_collision_layer_names[16] = {
+                    "Layer 1", "Layer 2", "Layer 3", "Layer 4",
+                    "Layer 5", "Layer 6", "Layer 7", "Layer 8",
+                    "Layer 9", "Layer 10", "Layer 11", "Layer 12",
+                    "Layer 13", "Layer 14", "Layer 15", "Layer 16"
+                };
+                for(int i = 0; i < 16; i++) {
+                    nk_bool selected = (ent->rigidbody->p2d_object.mask & (1 << i)) != 0;
+
+                    // if selected, make the text black, else white
+                    struct nk_color cache = ctx->style.selectable.text_normal_active;
+                    struct nk_color cach2 = ctx->style.selectable.text_hover_active;
+                    ctx->style.selectable.text_normal_active = selected ? nk_rgb(0, 0, 0) : nk_rgb(255, 255, 255);
+                    ctx->style.selectable.text_hover_active = selected ? nk_rgb(0, 0, 0) : nk_rgb(255, 255, 255);
+
+                    if(nk_selectable_label(ctx, ye_collision_layer_names[i], NK_TEXT_CENTERED, &selected)) {
+                        ent->rigidbody->p2d_object.mask ^= (1 << i); // toggle the bit
+                        editor_unsaved();
+                    }
+
+                    ctx->style.selectable.text_normal_active = cache;
+                    ctx->style.selectable.text_hover_active = cach2;
+                }
+            
                 nk_tree_pop(ctx);
             }
         
