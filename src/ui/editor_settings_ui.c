@@ -44,9 +44,17 @@ char project_window_title[256];
 char project_icon_path[256];
 bool project_stretch_viewport; // true or false
 bool project_stretch_resolution; // true or false
+
+// gravity and physics settings
 float gravity_x;
 float gravity_y;
+float air_density;
+int substeps;
+// TODO: mass scaling? it breaks mid-sim
+int joint_substeps;
 int grid_size;
+float mass_scale;
+bool frustum_sleeping;
 
 /*
     Build settings variables
@@ -274,6 +282,56 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 nk_tooltip(ctx, "Controls the size of broad phase detection cells.");
             nk_property_int(ctx, "#Size:", 25, &grid_size, 2000, 1, 5);
 
+            /*
+                Air Density (custom float input)
+            */
+            nk_layout_row_dynamic(ctx, 25, 2);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Air Density:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the density of air in the simulation, used for air resistance.");
+            static char air_density_buf[32];
+            snprintf(air_density_buf, sizeof(air_density_buf), "%.6f", air_density);
+            if (nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, air_density_buf, sizeof(air_density_buf), nk_filter_float)) {
+                float tmp = strtof(air_density_buf, NULL);
+                if (tmp >= 0.0f && tmp <= 1.0f) air_density = tmp;
+            }
+
+            /*
+                Substeps
+            */
+            nk_layout_row_dynamic(ctx, 25, 2);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Substeps:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the number of substeps in the physics simulation, higher values will result in more accurate physics but slower performance.");
+            nk_property_int(ctx, "#Substeps:", 1, &substeps, 100, 1, 1);
+
+            /*
+                Joint Substeps
+            */
+            nk_layout_row_dynamic(ctx, 25, 2);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Joint Substeps:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the number of substeps for joint physics simulation, higher values will result in more accurate joint physics but slower performance.");
+            nk_property_int(ctx, "#Substeps:", 1, &joint_substeps, 100, 1, 1);
+
+            /*
+                Mass scaling (custom float input)
+            */
+            nk_layout_row_dynamic(ctx, 25, 2);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Mass Scaling:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Controls the scaling of mass in the physics simulation, higher values will result in heavier objects, lower values will result in lighter objects.");
+            static char mass_scale_buf[32];
+            snprintf(mass_scale_buf, sizeof(mass_scale_buf), "%.6f", mass_scale);
+            if (nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, mass_scale_buf, sizeof(mass_scale_buf), nk_filter_float)) {
+                float tmp = strtof(mass_scale_buf, NULL);
+                if (tmp >= 0.000001f && tmp <= 1.0f) mass_scale = tmp;
+            }
+
             // lay out our booleans
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -448,11 +506,22 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(SETTINGS, "p2d_gravity_x", json_real(gravity_x));
                 json_object_set_new(SETTINGS, "p2d_gravity_y", json_real(gravity_y));
                 json_object_set_new(SETTINGS, "p2d_grid_size", json_integer(grid_size));
-                
+                json_object_set_new(SETTINGS, "p2d_air_density", json_real(air_density));
+                json_object_set_new(SETTINGS, "p2d_substeps", json_integer(substeps));
+                json_object_set_new(SETTINGS, "p2d_joint_substeps", json_integer(joint_substeps));
+                json_object_set_new(SETTINGS, "p2d_frustum_sleeping", frustum_sleeping ? json_true() : json_false());
+                json_object_set_new(SETTINGS, "p2d_mass_scaling", json_real(mass_scale));
+
                 // edge: when saving actually update in p2d_state
                 YE_STATE.engine.p2d_state->p2d_gravity.x = gravity_x;
                 YE_STATE.engine.p2d_state->p2d_gravity.y = gravity_y;
                 YE_STATE.engine.p2d_state->p2d_cell_size= grid_size;
+                YE_STATE.engine.p2d_state->p2d_air_density = air_density;
+                YE_STATE.engine.p2d_state->p2d_substeps = substeps;
+                YE_STATE.engine.p2d_state->p2d_joint_iterations = joint_substeps;
+                // TODO: requires us to track active camera or do lookup from p2d (im too lazy rn)
+                // YE_STATE.engine.p2d_state->p2d_frustum_sleeping = frustum_sleeping;
+                YE_STATE.engine.p2d_state->p2d_mass_scaling = mass_scale;
                 
                 // save the settings file
                 ye_json_write(ye_path("settings.yoyo"),SETTINGS);
@@ -693,6 +762,42 @@ void ye_editor_paint_project(struct nk_context *ctx){
                     if(!ye_json_int(SETTINGS, "p2d_grid_size", &grid_size)){
                         grid_size = 200;
                     }
+
+                    /*
+                        Air Density
+                    */
+                    if(!ye_json_float(SETTINGS, "p2d_air_density", &air_density)){
+                        air_density = P2D_DEFAULT_AIR_DENSITY;
+                    }
+
+                    /*
+                        Substeps
+                    */
+                    if(!ye_json_int(SETTINGS, "p2d_substeps", &substeps)){
+                        substeps = P2D_DEFAULT_SUBSTEPS;
+                    }
+
+                    /*
+                        Joint Substeps
+                    */
+                    if(!ye_json_int(SETTINGS, "p2d_joint_substeps", &joint_substeps)){
+                        joint_substeps = P2D_DEFAULT_JOINT_SUBSTEPS;
+                    }
+
+                    /*
+                        Frustum Sleeping
+                    */
+                    if(!ye_json_bool(SETTINGS, "p2d_frustum_sleeping", &frustum_sleeping)){
+                        frustum_sleeping = false;
+                    }
+
+                    /*
+                        Mass Scaling
+                    */
+                    if(!ye_json_float(SETTINGS, "p2d_mass_scaling", &mass_scale)){
+                        mass_scale = P2D_DEFAULT_MASS_SCALE;
+                    }
+                    
 
                     /*
                         Open our build file
