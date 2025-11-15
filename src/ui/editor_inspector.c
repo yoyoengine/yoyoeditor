@@ -421,6 +421,125 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
                         }
 
                         break;
+                    case YE_RENDERER_TYPE_TEXT_OUTLINED:
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, "Text Outlined Renderer", NK_TEXT_CENTERED);
+
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Text:", NK_TEXT_LEFT);
+
+                        // text //
+
+                        // Allocate a temporary buffer that is large enough for user input
+                        char temp_buffer_outlined[1024];
+                        strncpy(temp_buffer_outlined, ent->renderer->renderer_impl.text_outlined->text, sizeof(temp_buffer_outlined));
+                        temp_buffer_outlined[sizeof(temp_buffer_outlined) - 1] = '\0';  // Ensure null-termination
+
+                        // Allow the user to edit the text in the temporary buffer
+                        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer_outlined, sizeof(temp_buffer_outlined), nk_filter_default);
+
+                        // If the text has been changed, replace the old text with the new one
+                        if (strcmp(temp_buffer_outlined, ent->renderer->renderer_impl.text_outlined->text) != 0) {
+                            free(ent->renderer->renderer_impl.text_outlined->text);
+                            ent->renderer->renderer_impl.text_outlined->text = strdup(temp_buffer_outlined);
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // wrapping //
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Wrap Width:", NK_TEXT_LEFT);
+                        nk_property_int(ctx, "#px", 0, &ent->renderer->renderer_impl.text_outlined->wrap_width, 1000000, 1, 5);
+
+                        // color //
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Color (name):", NK_TEXT_LEFT);
+
+                        // Allocate a temporary buffer that is large enough for user input
+                        char temp_buffer_outlined_color[1024];
+                        strncpy(temp_buffer_outlined_color, ent->renderer->renderer_impl.text_outlined->color_name, sizeof(temp_buffer_outlined_color));
+                        temp_buffer_outlined_color[sizeof(temp_buffer_outlined_color) - 1] = '\0';  // Ensure null-termination
+
+                        // Allow the user to edit the text in the temporary buffer
+                        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer_outlined_color, sizeof(temp_buffer_outlined_color), nk_filter_default);
+
+                        // If the text has been changed, replace the old text with the new one
+                        if (strcmp(temp_buffer_outlined_color, ent->renderer->renderer_impl.text_outlined->color_name) != 0) {
+                            free(ent->renderer->renderer_impl.text_outlined->color_name);
+                            ent->renderer->renderer_impl.text_outlined->color_name = strdup(temp_buffer_outlined_color);
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // outline color //
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Outline Color (name):", NK_TEXT_LEFT);
+
+                        // Allocate a temporary buffer that is large enough for user input
+                        char temp_buffer_outlined_outline_color[1024];
+                        strncpy(temp_buffer_outlined_outline_color, ent->renderer->renderer_impl.text_outlined->outline_color_name, sizeof(temp_buffer_outlined_outline_color));
+                        temp_buffer_outlined_outline_color[sizeof(temp_buffer_outlined_outline_color) - 1] = '\0';  // Ensure null-termination
+
+                        // Allow the user to edit the text in the temporary buffer
+                        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer_outlined_outline_color, sizeof(temp_buffer_outlined_outline_color), nk_filter_default);
+
+                        // If the text has been changed, replace the old text with the new one
+                        if (strcmp(temp_buffer_outlined_outline_color, ent->renderer->renderer_impl.text_outlined->outline_color_name) != 0) {
+                            free(ent->renderer->renderer_impl.text_outlined->outline_color_name);
+                            ent->renderer->renderer_impl.text_outlined->outline_color_name = strdup(temp_buffer_outlined_outline_color);
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // font //
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Font (name):", NK_TEXT_LEFT);
+
+                        // Allocate a temporary buffer that is large enough for user input
+                        char temp_buffer_outlined_font[1024];
+                        strncpy(temp_buffer_outlined_font, ent->renderer->renderer_impl.text_outlined->font_name, sizeof(temp_buffer_outlined_font));
+                        temp_buffer_outlined_font[sizeof(temp_buffer_outlined_font) - 1] = '\0';  // Ensure null-termination
+
+                        // Allow the user to edit the text in the temporary buffer
+                        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer_outlined_font, sizeof(temp_buffer_outlined_font), nk_filter_default);
+
+                        // If the text has been changed, replace the old text with the new one
+                        if (strcmp(temp_buffer_outlined_font, ent->renderer->renderer_impl.text_outlined->font_name) != 0) {
+                            free(ent->renderer->renderer_impl.text_outlined->font_name);
+                            ent->renderer->renderer_impl.text_outlined->font_name = strdup(temp_buffer_outlined_font);
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // font size //
+                        nk_layout_row_dynamic(ctx, 25, 3);
+                        nk_label(ctx, "Font Size:", NK_TEXT_LEFT);
+                        int res_outlined = nk_propertyi(ctx, "#pt", 1, ent->renderer->renderer_impl.text_outlined->font_size, 500, 1, 5);
+                        if(res_outlined != ent->renderer->renderer_impl.text_outlined->font_size){
+                            ent->renderer->renderer_impl.text_outlined->font_size = res_outlined;
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // auto font size //
+                        if(nk_button_label(ctx, "Auto Compute")){
+                            ent->renderer->renderer_impl.text_outlined->font_size = _auto_calculate_font_size(ent->renderer->computed_pos);
+                            // recomputes the text texture
+                            ye_update_renderer_component(ent);
+                            editor_unsaved();
+                        }
+
+                        // outline size //
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Outline Size:", NK_TEXT_LEFT);
+                        nk_property_int(ctx, "#px", 0, &ent->renderer->renderer_impl.text_outlined->outline_size, 100, 1, 1);
+
+                        break;
                     /*
                         Todo: rest of the renderer types
                     */
