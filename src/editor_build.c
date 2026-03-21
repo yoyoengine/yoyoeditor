@@ -294,11 +294,11 @@ static int build_thread_func(void *userdata) {
         }
     }
 
-    // Make step
+    // Build step
     SDL_LockMutex(EDITOR_STATE.build_mutex);
-    snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Running Make ...");
+    snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "Building ...");
     SDL_UnlockMutex(EDITOR_STATE.build_mutex);
-    if(system("make -j8") != 0){
+    if(system("cmake --build . --parallel") != 0){
         SDL_LockMutex(EDITOR_STATE.build_mutex);
         EDITOR_STATE.build_status = 2;
         snprintf(EDITOR_STATE.build_status_msg, sizeof(EDITOR_STATE.build_status_msg), "error");
