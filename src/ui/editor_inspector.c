@@ -114,6 +114,7 @@ static void SDLCALL editor_browse_renderer_image_cb(void* userdata, const char* 
 
     const char *selected_path = *filelist;
     const char *resources_subpath = strstr(selected_path, "resources/");
+    if (!resources_subpath) resources_subpath = strstr(selected_path, "resources\\");
     if (resources_subpath) {
         selected_path = resources_subpath + strlen("resources/");
     }
@@ -124,6 +125,9 @@ static void SDLCALL editor_browse_renderer_image_cb(void* userdata, const char* 
     struct ye_entity *ent = (struct ye_entity*)userdata;
     free(ent->renderer->renderer_impl.image->src);
     ent->renderer->renderer_impl.image->src = strdup(selected_path);
+    for (char *p = ent->renderer->renderer_impl.image->src; *p; p++) {
+        if (*p == '\\') *p = '/';
+    }
     // recomputes the image texture
     ye_update_renderer_component(ent);
     editor_unsaved();
@@ -1150,6 +1154,7 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
 static void SDLCALL editor_browse_audio_ret(void* userdata, const char* const* filelist, int filter){
     const char *selected_path = *filelist;
     const char *resources_subpath = strstr(selected_path, "resources/");
+    if (!resources_subpath) resources_subpath = strstr(selected_path, "resources\\");
     if (resources_subpath) {
         selected_path = resources_subpath + strlen("resources/");
     }
@@ -1168,6 +1173,9 @@ static void SDLCALL editor_browse_audio_ret(void* userdata, const char* const* f
     }
 
     ent->audiosource->handle = strdup(selected_path);
+    for (char *p = ent->audiosource->handle; *p; p++) {
+        if (*p == '\\') *p = '/';
+    }
     editor_unsaved();
     
     (void)filter; // unused
