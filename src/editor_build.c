@@ -201,20 +201,49 @@ error:
 }
 
 void editor_run() {
-    if (!ye_chdir(ye_path("build"))) {
-        ye_logf(error, "Failed to change to build directory.\n");
+    json_t *settings  = json_load_file(ye_path("settings.yoyo"), 0, NULL);
+    json_t *build_cfg = json_load_file(ye_path("build.yoyo"),    0, NULL);
+    if (!settings || !build_cfg) {
+        ye_logf(error, "editor_run: failed to read settings/build.yoyo\n");
+        if (settings)  json_decref(settings);
+        if (build_cfg) json_decref(build_cfg);
         return;
     }
 
-    const char *args[] = { "cmake", "--build", ".", "--parallel", "--target", "run", NULL }; // TODO: config=??
+    const char *game_name  = json_string_value(json_object_get(settings,  "name"));
+    const char *build_mode = json_string_value(json_object_get(build_cfg, "build_mode"));
+    if (!game_name || !build_mode) {
+        ye_logf(error, "editor_run: missing name or build_mode in project settings\n");
+        json_decref(settings);
+        json_decref(build_cfg);
+        return;
+    }
 
-    SDL_Process *proc = SDL_CreateProcess(args, true);
+    // Build relative path to executable
+    char rel_path[512];
+    #ifdef _WIN32
+        snprintf(rel_path, sizeof(rel_path), "build/%s/%s.exe", build_mode, game_name);
+    #else
+        snprintf(rel_path, sizeof(rel_path), "build/%s/%s", build_mode, game_name);
+    #endif
+
+    // ye_path returns a static buffer — copy before any further ye_path calls
+    char exe_path[512];
+    snprintf(exe_path, sizeof(exe_path), "%s", ye_path(rel_path));
+
+    json_decref(settings);
+    json_decref(build_cfg);
+
+    if (!ye_file_exists(exe_path)) {
+        ye_logf(error, "editor_run: executable not found at %s (build first?)\n", exe_path);
+        return;
+    }
+
+    const char *args[] = { exe_path, NULL };
+    SDL_Process *proc = SDL_CreateProcess(args, false);
     if (!proc) {
-        ye_logf(error, "Failed to spawn game process: %s\n", SDL_GetError());
-        return;
+        ye_logf(error, "editor_run: failed to launch game: %s\n", SDL_GetError());
     }
-
-    // TODO: thread to capture process output
 }
 
 struct build_thread_args {
