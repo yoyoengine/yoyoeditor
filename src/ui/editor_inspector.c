@@ -33,6 +33,14 @@ float editor_selection_group_y = 0;
 float editor_selection_last_group_x = 0;
 float editor_selection_last_group_y = 0;
 
+static void _sync_rigidbody_pose_from_transform(struct ye_entity *ent) {
+    if(ent == NULL || ent->transform == NULL || ent->rigidbody == NULL) return;
+
+    ent->rigidbody->p2d_object.x = ent->transform->x + ent->rigidbody->transform_offset_x;
+    ent->rigidbody->p2d_object.y = ent->transform->y + ent->rigidbody->transform_offset_y;
+    ent->rigidbody->p2d_object.rotation = ent->transform->rotation;
+}
+
 /*
     Takes in the bounds we are going to paint into, and returns
     the pt (int) that the font needs loaded in to maximize its quality
@@ -64,6 +72,10 @@ int _auto_calculate_font_size(struct ye_rectf bounds){
 void _paint_transform(struct nk_context *ctx, struct ye_entity *ent){
     if(ent->transform != NULL){
         if(nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MAXIMIZED)){
+            float prev_x = ent->transform->x;
+            float prev_y = ent->transform->y;
+            float prev_rotation = ent->transform->rotation;
+
             nk_layout_row_dynamic(ctx, 25, 4);
             nk_label(ctx, "X:", NK_TEXT_CENTERED);
             nk_property_float(ctx, "#x", -1000000, &ent->transform->x, 1000000, 1, 5);
@@ -77,6 +89,10 @@ void _paint_transform(struct nk_context *ctx, struct ye_entity *ent){
             nk_label(ctx, "", NK_TEXT_CENTERED); // empty space
 
             // TODO: correct into range of 0-359 with modulo operation
+            if(ent->transform->x != prev_x || ent->transform->y != prev_y || ent->transform->rotation != prev_rotation) {
+                _sync_rigidbody_pose_from_transform(ent);
+                editor_unsaved();
+            }
 
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -780,9 +796,16 @@ void _paint_rigidbody(struct nk_context *ctx, struct ye_entity *ent) {
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_checkbox_label(ctx, "Active", (nk_bool*)&ent->rigidbody->active);
 
+            float prev_offset_x = ent->rigidbody->transform_offset_x;
+            float prev_offset_y = ent->rigidbody->transform_offset_y;
+
             nk_layout_row_dynamic(ctx, 25, 2);
             nk_property_float(ctx, "#offset x", -1000000, &ent->rigidbody->transform_offset_x, 1000000, 1, 5);
             nk_property_float(ctx, "#offset y", -1000000, &ent->rigidbody->transform_offset_y, 1000000, 1, 5);
+            if(ent->rigidbody->transform_offset_x != prev_offset_x || ent->rigidbody->transform_offset_y != prev_offset_y) {
+                _sync_rigidbody_pose_from_transform(ent);
+                editor_unsaved();
+            }
             nk_layout_row_dynamic(ctx, 25, 1);
 
             // const struct nk_input *in = &ctx->input;
@@ -1472,6 +1495,7 @@ void ye_editor_paint_inspector(struct nk_context *ctx){
 
                         current->ent->transform->x += editor_selection_group_x - editor_selection_last_group_x;
                         current->ent->transform->y += editor_selection_group_y - editor_selection_last_group_y;
+                        _sync_rigidbody_pose_from_transform(current->ent);
 
                         current = current->next;
                     }

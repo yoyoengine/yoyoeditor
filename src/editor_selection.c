@@ -310,8 +310,29 @@ void editor_render_selection_rects(){
             struct ye_point_rectf pos = ye_get_position2(ent, YE_COMPONENT_RIGIDBODY);
             
             if(ent->rigidbody->p2d_object.type == P2D_OBJECT_RECTANGLE){
-                struct ye_rectf rect = {pos.verticies[0].x, pos.verticies[0].y, pos.verticies[1].x - pos.verticies[0].x, pos.verticies[2].y - pos.verticies[1].y};
-                ye_debug_render_rect(rect.x, rect.y, ent->rigidbody->p2d_object.rectangle.width, ent->rigidbody->p2d_object.rectangle.height, red, 8);
+                struct ye_rectf rect = {
+                    ent->rigidbody->p2d_object.x,
+                    ent->rigidbody->p2d_object.y,
+                    ent->rigidbody->p2d_object.rectangle.width,
+                    ent->rigidbody->p2d_object.rectangle.height
+                };
+                struct ye_point_rectf rect_verts = ye_rect_to_point_rectf(rect);
+                if(ent->rigidbody->p2d_object.rotation != 0) {
+                    mat3_t rot = lla_mat3_identity();
+                    vec2_t center = (vec2_t){.data={
+                        rect.x + (rect.w / 2.0f),
+                        rect.y + (rect.h / 2.0f)
+                    }};
+                    rot = lla_mat3_rotate_around(rot, center, ent->rigidbody->p2d_object.rotation);
+                    for(int i = 0; i < 4; i++) {
+                        vec2_t p = (vec2_t){.data={rect_verts.verticies[i].x, rect_verts.verticies[i].y}};
+                        p = lla_mat3_mult_vec2(rot, p);
+                        rect_verts.verticies[i].x = p.data[0];
+                        rect_verts.verticies[i].y = p.data[1];
+                    }
+                }
+                rect_verts = ye_world_prectf_to_screen(rect_verts);
+                ye_debug_render_prect(rect_verts, red, 8);
             }
             else if(ent->rigidbody->p2d_object.type == P2D_OBJECT_CIRCLE){
                 ye_debug_render_circle(pos.verticies[0].x, pos.verticies[0].y, ent->rigidbody->p2d_object.circle.radius, red, 8);
