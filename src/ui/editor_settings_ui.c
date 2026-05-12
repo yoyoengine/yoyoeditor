@@ -69,6 +69,7 @@ char build_rc_path[256];
 bool original_use_local_engine;
 bool use_local_engine;
 char local_engine_path[512];
+char build_executable_path[512];
 
 /*
     Helper functions
@@ -430,6 +431,34 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
             nk_combobox(ctx, build_modes, NK_LEN(build_modes), &build_mode_int, 25, nk_vec2(200,200));
 
             /*
+                Executable path override
+            */
+            nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
+            nk_layout_row_push(ctx, 0.5f);
+            bounds = nk_widget_bounds(ctx);
+            nk_label(ctx, "Exe Path Override:", NK_TEXT_LEFT);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, "Empty = default (build/<mode>/<name>). Set to exe path if CMakeLists outputs elsewhere.");
+            nk_layout_row_push(ctx, 0.43f);
+            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, build_executable_path, 512, nk_filter_default);
+            nk_layout_row_push(ctx, 0.05f);
+            nk_layout_row_push(ctx, 0.06f);
+            if(nk_button_image(ctx, editor_icons.folder)){
+                ye_pick_file(
+                    (struct ye_picker_data){
+                        .filter = ye_picker_any_filters,
+                        .num_filters = &ye_picker_num_any_filters,
+
+                        .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+                        .dest.output_buf = {
+                            .buffer = build_executable_path,
+                            .size = sizeof(build_executable_path) - 1,
+                        },
+                    }
+                );
+            }
+
+            /*
                 Advanced Build Settings
             */
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -535,6 +564,7 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(BUILD_FILE, "delete_cache", json_boolean((original_build_platform_int != build_platform_int) || (original_use_local_engine != use_local_engine)));
                 json_object_set_new(BUILD_FILE, "use_local_engine", json_boolean(use_local_engine));
                 json_object_set_new(BUILD_FILE, "local_engine_path", json_string(local_engine_path));
+                json_object_set_new(BUILD_FILE, "executable_path", json_string(build_executable_path));
                 ye_json_write(ye_path("build.yoyo"),BUILD_FILE);
 
                 editor_saved();
@@ -896,6 +926,17 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         }
                         strncpy(local_engine_path, (char*)tmp_local_engine_path, (size_t)sizeof(local_engine_path) - 1);
                         local_engine_path[(size_t)sizeof(local_engine_path) - 1] = '\0'; // null terminate just in case TODO: write helper?
+
+                        /*
+                            Executable path override
+                        */
+                        const char *tmp_executable_path;
+                        if (!ye_json_string(BUILD_FILE, "executable_path", &tmp_executable_path)) {
+                            build_executable_path[0] = '\0';
+                        } else {
+                            strncpy(build_executable_path, tmp_executable_path, sizeof(build_executable_path) - 1);
+                            build_executable_path[sizeof(build_executable_path) - 1] = '\0';
+                        }
                     }
                     else{
                         ye_logf(error, "build.yoyo not found.");
@@ -904,6 +945,7 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         strcpy((char*)build_platform,"linux");
                         build_platform_int = 0;
                         ye_version_tagify(build_engine_tag_name);
+                        build_executable_path[0] = '\0';
                     }
                 }
             }

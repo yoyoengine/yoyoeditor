@@ -210,26 +210,40 @@ void editor_run() {
         return;
     }
 
-    const char *game_name  = json_string_value(json_object_get(settings,  "name"));
-    const char *build_mode = json_string_value(json_object_get(build_cfg, "build_mode"));
-    if (!game_name || !build_mode) {
-        ye_logf(error, "editor_run: missing name or build_mode in project settings\n");
-        json_decref(settings);
-        json_decref(build_cfg);
-        return;
-    }
-
-    // Build relative path to executable
-    char rel_path[512];
-    #ifdef _WIN32
-        snprintf(rel_path, sizeof(rel_path), "build/%s/%s.exe", build_mode, game_name);
-    #else
-        snprintf(rel_path, sizeof(rel_path), "build/%s/%s", build_mode, game_name);
-    #endif
-
-    // ye_path returns a static buffer — copy before any further ye_path calls
     char exe_path[512];
-    snprintf(exe_path, sizeof(exe_path), "%s", ye_path(rel_path));
+
+    const char *exe_override = json_string_value(json_object_get(build_cfg, "executable_path"));
+    if (exe_override && strlen(exe_override) > 0) {
+        // absolute path check: drive letter on Windows, leading slash on Linux/Mac
+        #ifdef _WIN32
+            bool is_abs = (strlen(exe_override) >= 2 && exe_override[1] == ':');
+        #else
+            bool is_abs = (exe_override[0] == '/');
+        #endif
+        if (is_abs)
+            snprintf(exe_path, sizeof(exe_path), "%s", exe_override);
+        else
+            snprintf(exe_path, sizeof(exe_path), "%s", ye_path(exe_override));
+    } else {
+        const char *game_name  = json_string_value(json_object_get(settings,  "name"));
+        const char *build_mode = json_string_value(json_object_get(build_cfg, "build_mode"));
+        if (!game_name || !build_mode) {
+            ye_logf(error, "editor_run: missing name or build_mode in project settings\n");
+            json_decref(settings);
+            json_decref(build_cfg);
+            return;
+        }
+
+        char rel_path[512];
+        #ifdef _WIN32
+            snprintf(rel_path, sizeof(rel_path), "build/%s/%s.exe", build_mode, game_name);
+        #else
+            snprintf(rel_path, sizeof(rel_path), "build/%s/%s", build_mode, game_name);
+        #endif
+
+        // ye_path returns a static buffer — copy before any further ye_path calls
+        snprintf(exe_path, sizeof(exe_path), "%s", ye_path(rel_path));
+    }
 
     json_decref(settings);
     json_decref(build_cfg);
