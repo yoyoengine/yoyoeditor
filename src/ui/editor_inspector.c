@@ -983,145 +983,145 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_label(ctx, "Script:", NK_TEXT_LEFT);
 
-            // Allocate a temporary buffer that is large enough for user input
-            char temp_buffer[1024];
-            strncpy(temp_buffer, ent->lua_script->script_handle, sizeof(temp_buffer));
-            temp_buffer[sizeof(temp_buffer) - 1] = '\0';  // Ensure null-termination
+            //// Allocate a temporary buffer that is large enough for user input
+            //char temp_buffer[1024];
+            //strncpy(temp_buffer, ent->lua_script->script_handle, sizeof(temp_buffer));
+            //temp_buffer[sizeof(temp_buffer) - 1] = '\0';  // Ensure null-termination
 
-            // layout a Nuklear row with 80% for entry and 20% for open button
-            nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
-            nk_layout_row_push(ctx, 0.77);
+            //// layout a Nuklear row with 80% for entry and 20% for open button
+            //nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 2);
+            //nk_layout_row_push(ctx, 0.77);
 
-            // Allow the user to edit the text in the temporary buffer
-            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer, sizeof(temp_buffer), nk_filter_default);
+            //// Allow the user to edit the text in the temporary buffer
+            //nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, temp_buffer, sizeof(temp_buffer), nk_filter_default);
 
-            // gap
-            nk_layout_row_push(ctx, 0.02);
-            nk_label(ctx, "", NK_TEXT_CENTERED);
+            //// gap
+            //nk_layout_row_push(ctx, 0.02);
+            //nk_label(ctx, "", NK_TEXT_CENTERED);
 
-            // layout a Nuklear row with 20% for open button
-            nk_layout_row_push(ctx, 0.21);
-            if(nk_button_label(ctx, "Open"))
-                editor_open_in_system(ye_path_resources(temp_buffer));
+            //// layout a Nuklear row with 20% for open button
+            //nk_layout_row_push(ctx, 0.21);
+            //if(nk_button_label(ctx, "Open"))
+            //    editor_open_in_system(ye_path_resources(temp_buffer));
 
-            // If the text has been changed, replace the old text with the new one
-            if (strcmp(temp_buffer, ent->lua_script->script_handle) != 0) {
-                free(ent->lua_script->script_handle);
-                ent->lua_script->script_handle = strdup(temp_buffer);
-                // printf("Changed script to %s\n", ent->lua_script->script_handle);
-            }
+            //// If the text has been changed, replace the old text with the new one
+            //if (strcmp(temp_buffer, ent->lua_script->script_handle) != 0) {
+            //    free(ent->lua_script->script_handle);
+            //    ent->lua_script->script_handle = strdup(temp_buffer);
+            //    // printf("Changed script to %s\n", ent->lua_script->script_handle);
+            //}
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label(ctx, "Globals:", NK_TEXT_LEFT);
+            //nk_layout_row_dynamic(ctx, 25, 1);
+            //nk_layout_row_dynamic(ctx, 25, 1);
+            //nk_label(ctx, "Globals:", NK_TEXT_LEFT);
 
-            if(ent->lua_script->globals != NULL){
-                nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
+            //if(ent->lua_script->globals != NULL){
+            //    nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
 
-                nk_layout_row_push(ctx, 0.40);
-                nk_label(ctx, "Name", NK_TEXT_LEFT);
+            //    nk_layout_row_push(ctx, 0.40);
+            //    nk_label(ctx, "Name", NK_TEXT_LEFT);
 
-                nk_layout_row_push(ctx, 0.07);
-                nk_label(ctx, "", NK_TEXT_CENTERED);
+            //    nk_layout_row_push(ctx, 0.07);
+            //    nk_label(ctx, "", NK_TEXT_CENTERED);
 
-                nk_layout_row_push(ctx, 0.40);
-                nk_label(ctx, "Value", NK_TEXT_LEFT);
-                
+            //    nk_layout_row_push(ctx, 0.40);
+            //    nk_label(ctx, "Value", NK_TEXT_LEFT);
+            //    
 
-                struct ye_lua_script_global *current = ent->lua_script->globals;
-                while(current != NULL) {
-                    nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
+            //    struct ye_lua_script_global *current = ent->lua_script->globals;
+            //    while(current != NULL) {
+            //        nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
 
-                    nk_layout_row_push(ctx, 0.40);
-                    nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->name, YE_LUA_SCRIPT_GLOBAL_NAME_MAX_CHARACTERS, nk_filter_default);
+            //        nk_layout_row_push(ctx, 0.40);
+            //        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->name, YE_LUA_SCRIPT_GLOBAL_NAME_MAX_CHARACTERS, nk_filter_default);
 
-                    nk_layout_row_push(ctx, 0.07);
-                    nk_label(ctx, "", NK_TEXT_CENTERED);
+            //        nk_layout_row_push(ctx, 0.07);
+            //        nk_label(ctx, "", NK_TEXT_CENTERED);
 
-                    nk_layout_row_push(ctx, 0.40);
-                    switch(current->type){
-                        case YE_LSG_NUMBER:
-                            nk_property_double(ctx, "#", -1000000, &current->value.number, 1000000, 1, 5);
-                            break;
-                        case YE_LSG_STRING:
-                            nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->value.string, YE_LUA_SCRIPT_GLOBAL_VALUE_STRING_MAX_CHARACTERS, nk_filter_default);
-                            break;
-                        case YE_LSG_BOOL:
-                            nk_checkbox_label(ctx, "", (nk_bool *)(&current->value.boolean));
-                            break;
-                        default:
-                            break;
-                    }
+            //        nk_layout_row_push(ctx, 0.40);
+            //        switch(current->type){
+            //            case YE_LSG_NUMBER:
+            //                nk_property_double(ctx, "#", -1000000, &current->value.number, 1000000, 1, 5);
+            //                break;
+            //            case YE_LSG_STRING:
+            //                nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, current->value.string, YE_LUA_SCRIPT_GLOBAL_VALUE_STRING_MAX_CHARACTERS, nk_filter_default);
+            //                break;
+            //            case YE_LSG_BOOL:
+            //                nk_checkbox_label(ctx, "", (nk_bool *)(&current->value.boolean));
+            //                break;
+            //            default:
+            //                break;
+            //        }
 
-                    nk_layout_row_push(ctx, 0.07);
-                    nk_label(ctx, "", NK_TEXT_CENTERED);
+            //        nk_layout_row_push(ctx, 0.07);
+            //        nk_label(ctx, "", NK_TEXT_CENTERED);
 
-                    nk_layout_row_push(ctx, 0.05);
-                    if(nk_button_image(ctx, editor_icons.trash)) {
-                        ye_lua_script_remove_global(ent, current->name);
-                        editor_unsaved();
-                        break; // do not loop over broken memory
-                    }
-                    current = current->next;
-                }
-            }
-            else {
-                nk_layout_row_dynamic(ctx, 10, 1);
-                nk_label_colored(ctx, "No globals", NK_TEXT_CENTERED, nk_rgb(150, 150, 150));
-            }
+            //        nk_layout_row_push(ctx, 0.05);
+            //        if(nk_button_image(ctx, editor_icons.trash)) {
+            //            ye_lua_script_remove_global(ent, current->name);
+            //            editor_unsaved();
+            //            break; // do not loop over broken memory
+            //        }
+            //        current = current->next;
+            //    }
+            //}
+            //else {
+            //    nk_layout_row_dynamic(ctx, 10, 1);
+            //    nk_label_colored(ctx, "No globals", NK_TEXT_CENTERED, nk_rgb(150, 150, 150));
+            //}
 
-            // padding for add new global section
-            nk_layout_row_dynamic(ctx, 10, 1);
+            //// padding for add new global section
+            //nk_layout_row_dynamic(ctx, 10, 1);
 
-            // WARN: THESE INDEXES MUST COORESPOND TO THE ENUM IN YE_LUA_SCRIPT.H
-            static const char *nk_label_global_keys[] = {"number", "string", "boolean"};
-            static int nk_label_global_selected_key = 0;
+            //// WARN: THESE INDEXES MUST COORESPOND TO THE ENUM IN YE_LUA_SCRIPT.H
+            //static const char *nk_label_global_keys[] = {"number", "string", "boolean"};
+            //static int nk_label_global_selected_key = 0;
 
-            nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
-            nk_layout_row_push(ctx, 0.30);
-            nk_label(ctx, "Add new global:", NK_TEXT_LEFT);
-            
-            nk_layout_row_push(ctx, 0.09);
-            nk_label(ctx, "", NK_TEXT_CENTERED);
+            //nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
+            //nk_layout_row_push(ctx, 0.30);
+            //nk_label(ctx, "Add new global:", NK_TEXT_LEFT);
+            //
+            //nk_layout_row_push(ctx, 0.09);
+            //nk_label(ctx, "", NK_TEXT_CENTERED);
 
-            nk_layout_row_push(ctx, 0.37);
-            nk_label_global_selected_key = nk_combo(ctx, nk_label_global_keys, 3, nk_label_global_selected_key, 25, nk_vec2(200,200));
+            //nk_layout_row_push(ctx, 0.37);
+            //nk_label_global_selected_key = nk_combo(ctx, nk_label_global_keys, 3, nk_label_global_selected_key, 25, nk_vec2(200,200));
 
-            nk_layout_row_push(ctx, 0.02);
-            nk_label(ctx, "", NK_TEXT_CENTERED);
+            //nk_layout_row_push(ctx, 0.02);
+            //nk_label(ctx, "", NK_TEXT_CENTERED);
 
-            nk_layout_row_push(ctx, 0.21);
-            if(nk_button_label(ctx, "Add")){
-                double vd;
-                bool vb;
-                switch((enum ye_lua_script_global_t)nk_label_global_selected_key){
-                    case YE_LSG_NUMBER:
-                        vd = 0;
-                        ye_lua_script_add_global(ent, YE_LSG_NUMBER, "new_global", (void *)&vd);
-                        break;
-                    case YE_LSG_STRING:
-                        ye_lua_script_add_global(ent, YE_LSG_STRING, "new_global", (void *)"");
-                        break;
-                    case YE_LSG_BOOL:
-                        vb = false;
-                        ye_lua_script_add_global(ent, YE_LSG_BOOL, "new_global", (void *)&vb);
-                        break;
-                    default:
-                        break;
-                }
+            //nk_layout_row_push(ctx, 0.21);
+            //if(nk_button_label(ctx, "Add")){
+            //    double vd;
+            //    bool vb;
+            //    switch((enum ye_lua_script_global_t)nk_label_global_selected_key){
+            //        case YE_LSG_NUMBER:
+            //            vd = 0;
+            //            ye_lua_script_add_global(ent, YE_LSG_NUMBER, "new_global", (void *)&vd);
+            //            break;
+            //        case YE_LSG_STRING:
+            //            ye_lua_script_add_global(ent, YE_LSG_STRING, "new_global", (void *)"");
+            //            break;
+            //        case YE_LSG_BOOL:
+            //            vb = false;
+            //            ye_lua_script_add_global(ent, YE_LSG_BOOL, "new_global", (void *)&vb);
+            //            break;
+            //        default:
+            //            break;
+            //    }
 
-                editor_unsaved();
-            }
+            //    editor_unsaved();
+            //}
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if(nk_button_label(ctx, "Remove Component")){
-                ye_remove_lua_script_component(ent);
-                editor_unsaved();
-                editor_deselect_all();
-                nk_tree_pop(ctx);
-                return;
-            }
+            //nk_layout_row_dynamic(ctx, 25, 1);
+            //nk_layout_row_dynamic(ctx, 25, 1);
+            //if(nk_button_label(ctx, "Remove Component")){
+            //    ye_remove_lua_script_component(ent);
+            //    editor_unsaved();
+            //    editor_deselect_all();
+            //    nk_tree_pop(ctx);
+            //    return;
+            //}
             
             nk_tree_pop(ctx);
         }
@@ -1133,44 +1133,44 @@ void _paint_script(struct nk_context *ctx, struct ye_entity *ent){
         nk_layout_row_dynamic(ctx, 25, 1);
 
 
-        // proposed_script_path is used to hold the path that the user is typing in
-        nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
+        //// proposed_script_path is used to hold the path that the user is typing in
+        //nk_layout_row_begin(ctx, NK_DYNAMIC, 25, 3);
 
-        nk_layout_row_push(ctx, 0.30);
-        nk_label(ctx, "Script Path:", NK_TEXT_LEFT);
+        //nk_layout_row_push(ctx, 0.30);
+        //nk_label(ctx, "Script Path:", NK_TEXT_LEFT);
 
-        nk_layout_row_push(ctx, 0.50);
-        nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, proposed_script_path, sizeof(proposed_script_path), nk_filter_default);
+        //nk_layout_row_push(ctx, 0.50);
+        //nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, proposed_script_path, sizeof(proposed_script_path), nk_filter_default);
 
-        // browse
-        nk_layout_row_push(ctx, 0.20);
-        if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
-            ye_pick_resource_file(
-                (struct ye_picker_data){
-                    .filter = ye_picker_script_filters,
-                    .num_filters = &ye_picker_num_script_filters,
+        //// browse
+        //nk_layout_row_push(ctx, 0.20);
+        //if(nk_button_image_label(ctx, editor_icons.folder, "Browse", NK_TEXT_CENTERED)){
+        //    ye_pick_resource_file(
+        //        (struct ye_picker_data){
+        //            .filter = ye_picker_script_filters,
+        //            .num_filters = &ye_picker_num_script_filters,
 
-                    .response_mode = YE_PICKER_WRITE_CHAR_BUF,
-                    .dest.output_buf = {
-                        .buffer = proposed_script_path,
-                        .size = sizeof(proposed_script_path),
-                    },
-                }
-            );
-        }
+        //            .response_mode = YE_PICKER_WRITE_CHAR_BUF,
+        //            .dest.output_buf = {
+        //                .buffer = proposed_script_path,
+        //                .size = sizeof(proposed_script_path),
+        //            },
+        //        }
+        //    );
+        //}
 
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        if(nk_button_label(ctx, "Add Script Component")){
+        //nk_layout_row_dynamic(ctx, 25, 1);
+        //nk_layout_row_dynamic(ctx, 25, 1);
+        //if(nk_button_label(ctx, "Add Script Component")){
 
-            // if file does not exist, lets create it
-            if(!ye_file_exists(ye_path_resources(proposed_script_path))){
-                ye_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
-            }
+        //    //// if file does not exist, lets create it
+        //    //if(!ye_file_exists(ye_path_resources(proposed_script_path))){
+        //    //    ye_touch_file(ye_path_resources(proposed_script_path), "-- Template yoyoengine Lua script,\n-- provided for your convenience! :)\n\nfunction onMount()\n\t\nend\n\nfunction onUpdate()\n\t\nend\n\nfunction onUnmount()\n\t\nend");
+        //    //}
 
-            ye_add_lua_script_component(ent, proposed_script_path, NULL); // TODO: lua system hasnt been updated for yep yet. we need to read from bytecode or just content
-            editor_unsaved();
-        }
+        //    //ye_add_lua_script_component(ent, proposed_script_path, NULL); // TODO: lua system hasnt been updated for yep yet. we need to read from bytecode or just content
+        //    //editor_unsaved();
+        //}
     }
 }
 

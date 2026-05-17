@@ -40,6 +40,9 @@ if(MSVC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX-")
 endif()
 
+set(RC_PATH "${CMAKE_SOURCE_DIR}/editor_resources/icon.rc" CACHE STRING "The path to the rc icon file")
+file(TO_CMAKE_PATH "${RC_PATH}" RC_PATH)
+
 # Define the source files for your project
 file(GLOB_RECURSE SOURCES CMAKE_CONFIGURE_DEPENDS "src/*.c")
 
@@ -58,7 +61,7 @@ SET(CMAKE_INSTALL_RPATH $ORIGIN)
 #       Use chrpath to see the real rpath.
     
 # Create the executable and link the engine library
-add_executable(${EXECUTABLE_NAME} ${SOURCES})
+add_executable(${EXECUTABLE_NAME} ${SOURCES} ${RC_PATH})
     
 # we take in ZOOGIES_DEVELOPMENT_BUILD if we are
 # building locally outside of a normal release cycle
