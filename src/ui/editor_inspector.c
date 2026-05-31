@@ -189,7 +189,15 @@ void _paint_renderer(struct nk_context *ctx, struct ye_entity *ent){
             nk_layout_row_dynamic(ctx, 25, 2);
             nk_layout_row_dynamic(ctx, 25, 2);
             // nk_label(ctx, "Alignment:", NK_TEXT_LEFT); TODO
+            
+            // hopefully the compiler is smart enough to optimize this LOL
+			int before_z = ent->renderer->z;
             nk_property_int(ctx, "#z", -1000000, &ent->renderer->z, 1000000, 1, 5);
+			if (ent->renderer->z != before_z) {
+				editor_unsaved();
+                ye_sort_renderer_entity_list_by_z();
+            }
+
             nk_property_float(ctx, "#Rotation", -1000000, &ent->renderer->rotation, 1000000, 1, 5);
 
             // TODO: correct into range of 0-359 with modulo operation
