@@ -29,6 +29,19 @@ char scene_music_path[256];
 bool scene_music_loop = true;
 float scene_music_volume = 1.0f;
 
+void editor_panel_scene_settings_reset(){
+    if(SCENE != NULL){
+        json_decref(SCENE);
+        SCENE = NULL;
+    }
+
+    scene_version = 0;
+    scene_default_camera[0] = '\0';
+    scene_music_path[0] = '\0';
+    scene_music_loop = true;
+    scene_music_volume = 1.0f;
+}
+
 json_t * open_scene_data(const char *path){
     json_t *scene = ye_json_read(ye_path_resources(path));
     if(!scene){
@@ -158,8 +171,7 @@ void editor_panel_scene_settings(struct nk_context *ctx){
         if(nk_button_label(ctx, "Cancel")){
             remove_ui_component("scene_settings");
             unlock_viewport();
-            json_decref(SCENE);
-            SCENE = NULL;
+            editor_panel_scene_settings_reset();
         }
         if(nk_button_label(ctx, "Save")){
 
@@ -207,8 +219,7 @@ void editor_panel_scene_settings(struct nk_context *ctx){
 
             remove_ui_component("scene_settings");
             unlock_viewport();
-            json_decref(SCENE);
-            SCENE = NULL;
+            editor_panel_scene_settings_reset();
         }
 
         nk_end(ctx);

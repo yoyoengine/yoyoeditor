@@ -145,7 +145,15 @@ void editor_ensure_origin_exists() {
 // the editor itself is triggering a scene load
 void editor_load_scene(char * path){
     editor_deselect_all();
+
+    if(ui_component_exists("scene_settings")){
+        remove_ui_component("scene_settings");
+        unlock_viewport();
+    }
+    editor_panel_scene_settings_reset();
+
     ye_load_scene(path);
+    editor_re_attach_ecs();
 }
 
 void editor_re_attach_ecs(){
@@ -209,8 +217,10 @@ void editor_pre_handle_input(SDL_Event event){
 void editor_scene_load_cb(const char *scene_name) {
     (void)scene_name;
 
+    editor_re_attach_ecs();
     editor_ensure_camera_exists();
     editor_ensure_origin_exists();
+    editor_re_attach_ecs();
 }
 
 void editor_welcome_loop() {

@@ -27,6 +27,7 @@ extern char editor_loading_buffer[100];
 void editor_panel_loading(struct nk_context *ctx);
 
 void editor_panel_scene_settings(struct nk_context *ctx);
+void editor_panel_scene_settings_reset();
 
 void editor_init_panel_welcome();
 void editor_panel_welcome(struct nk_context *ctx);

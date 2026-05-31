@@ -419,74 +419,78 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                 nk_layout_row_dynamic(ctx, 25, 2);
                 if(nk_button_label(ctx, "Abort")){
                     new_scene_popup_open = false;
-                    lock_viewport_interaction = !lock_viewport_interaction;
+                    unlock_viewport();
                 }
                 if(nk_button_label(ctx, "Create")){
-                    
-                    /*
-                        Build the new scene file and write it to disk
-                    */
-
-                    json_t *new_scene = json_object();
-                    json_object_set_new(new_scene, "name", json_string(new_scene_name));
-                    json_object_set_new(new_scene, "version", json_integer(YOYO_ENGINE_SCENE_VERSION));
-                    
-                    json_t* styles = json_array();
-					json_array_append_new(styles, json_string("styles.yoyo"));
-
-                    json_object_set_new(new_scene, "styles", styles);
-                    json_object_set_new(new_scene, "prefabs", json_array());
-
-                    json_t *scene = json_object();
-                    json_object_set_new(scene, "default camera", json_string("camera"));
-                    json_object_set_new(scene, "entities", json_array());
-                    json_object_set_new(new_scene, "scene", scene);
-
-                    // In entities, let's make the "camera" default camera
-                    json_t *camera = json_object();
-                    json_object_set_new(camera, "name", json_string("camera"));
-                    json_object_set_new(camera, "active", json_true());
-
-                    json_t *components = json_object();
-                    json_object_set_new(components, "transform", json_object());
-                    json_object_set_new(components, "camera", json_object());
-
-                    json_object_set_new(json_object_get(components, "transform"), "x", json_real(0));
-                    json_object_set_new(json_object_get(components, "transform"), "y", json_real(0));
-                    json_object_set_new(json_object_get(components, "transform"), "rotation", json_real(0));
-
-                    json_object_set_new(json_object_get(components, "camera"), "active", json_true());
-                    json_object_set_new(json_object_get(components, "camera"), "z", json_integer(999));
-
-                    json_t *view_field = json_object();
-                    json_object_set_new(view_field, "x", json_real(0));
-                    json_object_set_new(view_field, "y", json_real(0));
-                    json_object_set_new(view_field, "w", json_real(1920));
-                    json_object_set_new(view_field, "h", json_real(1080));
-                    json_object_set_new(json_object_get(components, "camera"), "view field", view_field);
-
-                    json_object_set_new(camera, "components", components);
-                    json_array_append_new(json_object_get(scene, "entities"), camera);
-
-                    // get the path of our new scene, it will be scenes/NAME.yoyo
-                    char new_scene_path[256 + 12];
-                    snprintf(new_scene_path, sizeof(new_scene_path), "scenes/%s.yoyo", new_scene_name);
-
-                    // check if this scene already exists
-                    if(ye_file_exists(ye_path_resources(new_scene_path))){
-                        // file exists
-                        ye_logf(error, "Scene already exists.\n");
+                    if(strlen(new_scene_name) == 0){
+                        ye_logf(error, "Scene name cannot be empty.\n");
                     }
                     else{
-                        ye_json_write(ye_path_resources(new_scene_path), new_scene);
-                        new_scene_popup_open = false;
-                        editor_load_scene(new_scene_path);
-                        editor_saved();
+                        /*
+                            Build the new scene file and write it to disk
+                        */
+
+                        json_t *new_scene = json_object();
+                        json_object_set_new(new_scene, "name", json_string(new_scene_name));
+                        json_object_set_new(new_scene, "version", json_integer(YOYO_ENGINE_SCENE_VERSION));
+
+                        json_t* styles = json_array();
+                        json_array_append_new(styles, json_string("styles.yoyo"));
+
+                        json_object_set_new(new_scene, "styles", styles);
+                        json_object_set_new(new_scene, "prefabs", json_array());
+
+                        json_t *scene = json_object();
+                        json_object_set_new(scene, "default camera", json_string("camera"));
+                        json_object_set_new(scene, "entities", json_array());
+                        json_object_set_new(new_scene, "scene", scene);
+
+                        // In entities, let's make the "camera" default camera
+                        json_t *camera = json_object();
+                        json_object_set_new(camera, "name", json_string("camera"));
+                        json_object_set_new(camera, "active", json_true());
+
+                        json_t *components = json_object();
+                        json_object_set_new(components, "transform", json_object());
+                        json_object_set_new(components, "camera", json_object());
+
+                        json_object_set_new(json_object_get(components, "transform"), "x", json_real(0));
+                        json_object_set_new(json_object_get(components, "transform"), "y", json_real(0));
+                        json_object_set_new(json_object_get(components, "transform"), "rotation", json_real(0));
+
+                        json_object_set_new(json_object_get(components, "camera"), "active", json_true());
+                        json_object_set_new(json_object_get(components, "camera"), "z", json_integer(999));
+
+                        json_t *view_field = json_object();
+                        json_object_set_new(view_field, "x", json_real(0));
+                        json_object_set_new(view_field, "y", json_real(0));
+                        json_object_set_new(view_field, "w", json_real(1920));
+                        json_object_set_new(view_field, "h", json_real(1080));
+                        json_object_set_new(json_object_get(components, "camera"), "view field", view_field);
+
+                        json_object_set_new(camera, "components", components);
+                        json_array_append_new(json_object_get(scene, "entities"), camera);
+
+                        // get the path of our new scene, it will be scenes/NAME.yoyo
+                        char new_scene_path[256 + 12];
+                        snprintf(new_scene_path, sizeof(new_scene_path), "scenes/%s.yoyo", new_scene_name);
+
+                        // check if this scene already exists
+                        if(ye_file_exists(ye_path_resources(new_scene_path))){
+                            // file exists
+                            ye_logf(error, "Scene already exists.\n");
+                        }
+                        else{
+                            ye_json_write(ye_path_resources(new_scene_path), new_scene);
+                            new_scene_popup_open = false;
+                            unlock_viewport();
+                            editor_load_scene(new_scene_path);
+                            editor_saved();
+                        }
+
+                        // cleanup
+                        json_decref(new_scene); // TODO: check for memroy leak, need to free camera?
                     }
-                    
-                    // cleanup
-                    json_decref(new_scene); // TODO: check for memroy leak, need to free camera?
-                    lock_viewport_interaction = !lock_viewport_interaction;
                 }
                 nk_popup_end(ctx);
             }
@@ -632,10 +636,16 @@ void ye_editor_paint_menu(struct nk_context *ctx){
             }
 
             if (nk_menu_item_label(ctx, "New Scene", NK_TEXT_LEFT)) {
-                    new_scene_popup_open = !new_scene_popup_open;
-                    lock_viewport_interaction = !lock_viewport_interaction;
+                if(!new_scene_popup_open){
+                    new_scene_popup_open = true;
+                    lock_viewport();
                     // reset fields
                     strcpy(new_scene_name, "");
+                }
+                else{
+                    new_scene_popup_open = false;
+                    unlock_viewport();
+                }
             }
             
             if (nk_menu_item_label(ctx, "Delete Current Scene", NK_TEXT_LEFT)) {
