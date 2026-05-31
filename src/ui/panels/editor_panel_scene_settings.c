@@ -110,10 +110,6 @@ void editor_panel_scene_settings(struct nk_context *ctx){
         sprintf(version_str, "%d", scene_version);
         nk_label(ctx, version_str, NK_TEXT_LEFT);
         
-
-        nk_layout_row_dynamic(ctx, 30, 1);
-        nk_label_colored(ctx, "TODO: prefabs and supplemental styles", NK_TEXT_LEFT, nk_rgb(255,255,0));
-
         /*
             Default Camera
         
