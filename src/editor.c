@@ -6,14 +6,6 @@
 */
 
 #include <stdio.h>
-#ifdef __linux__
-    #include <unistd.h>
-    #include <sys/wait.h>
-    #include <linux/wait.h>
-#else
-    #include <platform/windows/unistd.h>
-    // Windows doesn't have sys/wait.h or linux/wait.h
-#endif
 
 #include <SDL.h>
 #include <SDL_image.h>

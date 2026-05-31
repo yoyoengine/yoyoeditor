@@ -11,9 +11,6 @@
 #ifdef __linux__
     #include <unistd.h>
     #include <pwd.h>
-#else
-    #include <platform/windows/unistd.h>
-    // Windows doesn't have pwd.h, so we'll provide a fallback
 #endif
 
 #include <curl/curl.h>
@@ -453,7 +450,7 @@ static void SDLCALL editor_browse_existing_project_cb(void* userdata, const char
     // check if path/settings.yoyo exists, if so read it into json_t
     char settings_path[1024];
     snprintf(settings_path, sizeof(settings_path), "%s/settings.yoyo", *filelist);
-    if(access(settings_path, F_OK) == -1){
+    if(!ye_file_exists(settings_path)){
         ye_logf(error, "%s was not a real yoyoengine project.\n", *filelist);
         return;
     }

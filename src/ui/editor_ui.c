@@ -6,11 +6,6 @@
 */
 
 #include <stdio.h>
-#ifdef __linux__
-    #include <unistd.h>
-#else
-    #include <platform/windows/unistd.h>
-#endif
 #include <yoyoengine/yoyoengine.h>
 #include "editor.h"
 #include "editor_ui.h"
@@ -471,7 +466,7 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     snprintf(new_scene_path, sizeof(new_scene_path), "scenes/%s.yoyo", new_scene_name);
 
                     // check if this scene already exists
-                    if(access(ye_path_resources(new_scene_path), F_OK) != -1){
+                    if(ye_file_exists(ye_path_resources(new_scene_path))){
                         // file exists
                         ye_logf(error, "Scene already exists.\n");
                     }
