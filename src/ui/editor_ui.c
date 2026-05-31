@@ -430,7 +430,11 @@ void ye_editor_paint_menu(struct nk_context *ctx){
                     json_t *new_scene = json_object();
                     json_object_set_new(new_scene, "name", json_string(new_scene_name));
                     json_object_set_new(new_scene, "version", json_integer(YOYO_ENGINE_SCENE_VERSION));
-                    json_object_set_new(new_scene, "styles", json_array());
+                    
+                    json_t* styles = json_array();
+					json_array_append_new(styles, json_string("styles.yoyo"));
+
+                    json_object_set_new(new_scene, "styles", styles);
                     json_object_set_new(new_scene, "prefabs", json_array());
 
                     json_t *scene = json_object();
@@ -449,11 +453,14 @@ void ye_editor_paint_menu(struct nk_context *ctx){
 
                     json_object_set_new(json_object_get(components, "transform"), "x", json_real(0));
                     json_object_set_new(json_object_get(components, "transform"), "y", json_real(0));
+                    json_object_set_new(json_object_get(components, "transform"), "rotation", json_real(0));
 
                     json_object_set_new(json_object_get(components, "camera"), "active", json_true());
                     json_object_set_new(json_object_get(components, "camera"), "z", json_integer(999));
 
                     json_t *view_field = json_object();
+                    json_object_set_new(view_field, "x", json_real(0));
+                    json_object_set_new(view_field, "y", json_real(0));
                     json_object_set_new(view_field, "w", json_real(1920));
                     json_object_set_new(view_field, "h", json_real(1080));
                     json_object_set_new(json_object_get(components, "camera"), "view field", view_field);
