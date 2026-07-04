@@ -63,6 +63,7 @@ char build_engine_tag_name[256];
 char build_rc_path[256];
 bool original_use_local_engine;
 bool use_local_engine;
+char original_local_engine_path[512];
 char local_engine_path[512];
 char build_executable_path[512];
 
@@ -85,7 +86,8 @@ static void SDLCALL editor_engine_selector_dialog_cb(void* userdata, const char*
     }
 
     ye_logf(YE_LL_DEBUG, "Selected engine path: %s\n", *filelist);
-    strncpy(local_engine_path, *filelist, (size_t)sizeof(local_engine_path) - 1);
+    editor_make_relative_path(EDITOR_STATE.opened_project_path, *filelist, local_engine_path, sizeof(local_engine_path));
+    local_engine_path[(size_t)sizeof(local_engine_path) - 1] = '\0';
     // do not free filelist
     
     (void)userdata; // unused
@@ -549,6 +551,10 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 
                 // save the settings file
                 ye_json_write(ye_path("settings.yoyo"),SETTINGS);
+
+                char saved_local_engine_path[512];
+                editor_make_relative_path(EDITOR_STATE.opened_project_path, local_engine_path, saved_local_engine_path, sizeof(saved_local_engine_path));
+                saved_local_engine_path[sizeof(saved_local_engine_path) - 1] = '\0';
                 
                 // update build keys, then save
                 json_object_set_new(BUILD_FILE, "build_mode", json_string(build_modes[build_mode_int]));
@@ -556,9 +562,9 @@ void ye_editor_paint_project_settings(struct nk_context *ctx){
                 json_object_set_new(BUILD_FILE, "rc_path", json_string(build_rc_path));
                 json_object_set_new(BUILD_FILE, "platform", json_string(platforms[build_platform_int]));
                 json_object_set_new(BUILD_FILE, "core_tag", json_string(build_engine_tag_name));
-                json_object_set_new(BUILD_FILE, "delete_cache", json_boolean((original_build_platform_int != build_platform_int) || (original_use_local_engine != use_local_engine)));
+                json_object_set_new(BUILD_FILE, "delete_cache", json_boolean((original_build_platform_int != build_platform_int) || (original_use_local_engine != use_local_engine) || strcmp(original_local_engine_path, saved_local_engine_path) != 0));
                 json_object_set_new(BUILD_FILE, "use_local_engine", json_boolean(use_local_engine));
-                json_object_set_new(BUILD_FILE, "local_engine_path", json_string(local_engine_path));
+                json_object_set_new(BUILD_FILE, "local_engine_path", json_string(saved_local_engine_path));
                 json_object_set_new(BUILD_FILE, "executable_path", json_string(build_executable_path));
                 ye_json_write(ye_path("build.yoyo"),BUILD_FILE);
 
@@ -921,6 +927,8 @@ void ye_editor_paint_project(struct nk_context *ctx){
                         }
                         strncpy(local_engine_path, (char*)tmp_local_engine_path, (size_t)sizeof(local_engine_path) - 1);
                         local_engine_path[(size_t)sizeof(local_engine_path) - 1] = '\0'; // null terminate just in case TODO: write helper?
+                        strncpy(original_local_engine_path, local_engine_path, (size_t)sizeof(original_local_engine_path) - 1);
+                        original_local_engine_path[(size_t)sizeof(original_local_engine_path) - 1] = '\0';
 
                         /*
                             Executable path override

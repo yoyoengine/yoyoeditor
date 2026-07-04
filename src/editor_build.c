@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include "editor.h"
+#include "editor_utils.h"
 
 #include <yoyoengine/yoyoengine.h>
 
@@ -95,6 +96,7 @@ char **retrieve_build_args() {
     bool use_local_engine = json_boolean_value(json_object_get(BUILD_FILE, "use_local_engine"));
     const char *local_engine_path = json_string_value(json_object_get(BUILD_FILE, "local_engine_path"));
     const char *build_mode = json_string_value(json_object_get(BUILD_FILE, "build_mode"));
+    char resolved_local_engine_path[1024];
 
     if (!game_name || !game_rc_path || !cflags || !platform || !core_tag || !local_engine_path || !build_mode) {
         ye_logf(error, "Failed to get required values from JSON files.\n");
@@ -126,7 +128,8 @@ char **retrieve_build_args() {
         with fetchcontent
     */
     if(use_local_engine) {
-        args[3] = malloc(strlen(local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1);
+        editor_make_absolute_path(EDITOR_STATE.opened_project_path, local_engine_path, resolved_local_engine_path, sizeof(resolved_local_engine_path));
+        args[3] = malloc(strlen(resolved_local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1);
     }
     else {
         args[3] = malloc(strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1); // the engine tag for the game to build against. TODO: expose this?
@@ -156,7 +159,7 @@ char **retrieve_build_args() {
     }
     snprintf(args[2], strlen(cflags) + strlen("-DCMAKE_C_FLAGS=") + 1, "-DCMAKE_C_FLAGS=%s", cflags);
     if(use_local_engine) {
-        snprintf(args[3], strlen(local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1, "-DYOYO_ENGINE_SOURCE_DIR=\"%s\"", local_engine_path);
+        snprintf(args[3], strlen(resolved_local_engine_path) + strlen("-DYOYO_ENGINE_SOURCE_DIR=\"\"") + 1, "-DYOYO_ENGINE_SOURCE_DIR=\"%s\"", resolved_local_engine_path);
     }
     else {
         snprintf(args[3], strlen(core_tag) + strlen("-DYOYO_ENGINE_BUILD_TAG=\"\"") + 1, "-DYOYO_ENGINE_BUILD_TAG=\"%s\"", core_tag);
@@ -254,6 +257,47 @@ struct build_thread_args {
     bool force_configure;
 };
 
+static bool editor_cached_local_engine_path_mismatch(json_t *BUILD_FILE) {
+    bool use_local_engine = json_boolean_value(json_object_get(BUILD_FILE, "use_local_engine"));
+    const char *local_engine_path = json_string_value(json_object_get(BUILD_FILE, "local_engine_path"));
+    if (!use_local_engine || !local_engine_path) return false;
+
+    FILE *cache = fopen(ye_path("build/CMakeCache.txt"), "r");
+    if (!cache) return false;
+
+    char resolved_local_engine_path[1024];
+    editor_make_absolute_path(EDITOR_STATE.opened_project_path, local_engine_path, resolved_local_engine_path, sizeof(resolved_local_engine_path));
+
+    char line[2048];
+    bool found = false;
+    bool mismatch = false;
+    while (fgets(line, sizeof(line), cache)) {
+        if (strncmp(line, "YOYO_ENGINE_SOURCE_DIR:", strlen("YOYO_ENGINE_SOURCE_DIR:")) != 0) continue;
+
+        found = true;
+        char *value = strchr(line, '=');
+        if (!value) {
+            mismatch = true;
+            break;
+        }
+        value++;
+        value[strcspn(value, "\r\n")] = '\0';
+
+        char cached_engine_path[1024];
+        editor_make_absolute_path("", value, cached_engine_path, sizeof(cached_engine_path));
+        mismatch = strcmp(cached_engine_path, resolved_local_engine_path) != 0;
+        break;
+    }
+    fclose(cache);
+
+    if (!found) mismatch = true;
+    if (mismatch) {
+        ye_logf(info, "Local engine path changed or cache used a relative path. Reconfiguring CMake.\n");
+    }
+
+    return mismatch;
+}
+
 static int build_thread_func(void *userdata) {
     struct build_thread_args *args_struct = (struct build_thread_args *)userdata;
     bool should_run = args_struct->should_run;
@@ -277,6 +321,8 @@ static int build_thread_func(void *userdata) {
         SDL_UnlockMutex(EDITOR_STATE.build_mutex);
         return 1;
     }
+
+    force_configure = force_configure || editor_cached_local_engine_path_mismatch(BUILD_FILE);
 
     if(force_configure || json_boolean_value(json_object_get(BUILD_FILE, "delete_cache"))) {
         ye_delete_file(ye_path("build/CMakeCache.txt"));
