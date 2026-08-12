@@ -1,6 +1,7 @@
 # Yoyo Engine Editor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/xncSnrtQhg?style=flat-square)](https://discord.gg/xncSnrtQhg)
 ![GitHub Tag](https://img.shields.io/github/v/tag/yoyoengine/yoyoeditor)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/yoyoengine/yoyoeditor/total)
 
