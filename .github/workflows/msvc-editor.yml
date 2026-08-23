@@ -1,0 +1,23 @@
+name: msvc-editor
+on:
+  push:
+  pull_request:
+jobs:
+  build-windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure & build
+        shell: cmd
+        run: |
+          if exist CMakeLists.txt (
+            cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --config Release
+          ) else if exist *.sln (
+            msbuild /m /p:Configuration=Release
+          ) else (
+            echo "No CMakeLists.txt or solution; add project-specific build steps"
+            exit /b 0
+          )
